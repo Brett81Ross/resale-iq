@@ -11,8 +11,10 @@
         .header { text-align: center; margin: 30px 0; }
         .logo { max-width: 140px; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
-        #result { margin-top: 20px; white-space: pre-wrap; }
-        .listing-data-box { border: 2px dashed var(--accent); padding: 15px; border-radius: 12px; margin-top: 20px; background: rgba(0, 112, 243, 0.1); }
+        #result { margin-top: 20px; }
+        h3 { color: var(--accent); margin: 20px 0 10px 0; font-size: 20px; }
+        .links-box, .desc-box, .tips-box, .listing-data-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .listing-data-box { border: 2px dashed var(--accent); }
         .action-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: #000; border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .btn { width: 100%; max-width: 400px; padding: 18px; border-radius: 14px; border: none; font-weight: 700; font-size: 17px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
@@ -42,7 +44,6 @@
     <script>
         let resizedBase64 = "";
 
-        // Core Image Processor
         function handleFile(file) {
             const reader = new FileReader();
             reader.onload = e => {
@@ -75,7 +76,17 @@
                 if (data.error) throw new Error(data.error);
                 
                 let text = data.candidates[0].content.parts[0].text;
-                res.innerHTML = text.replace("### 📋 Listing Data", '</div><div class="listing-data-box"><h3>📋 Listing Data</h3>') + '</div>';
+                
+                // Strip markdown and inject clean HTML
+                text = text.replace(/###\s/g, '');
+                text = text.replace(/📦 Item Identification/g, '<h3>📦 Item Identification</h3>');
+                text = text.replace(/💰 Estimated Market Value/g, '<h3>💰 Estimated Market Value</h3>');
+                text = text.replace(/🔗 Live Market Comparisons/g, '<div class="links-box"><h3>🔗 Live Market Comparisons</h3>');
+                text = text.replace(/📝 Professional Resale Description/g, '</div><div class="desc-box"><h3>📝 Professional Resale Description</h3>');
+                text = text.replace(/💡 Pro-Tips for Selling/g, '</div><div class="tips-box"><h3>💡 Pro-Tips for Selling</h3>');
+                text = text.replace(/📋 Listing Data/g, '</div><div class="listing-data-box"><h3>📋 Listing Data</h3>') + '</div>';
+                
+                res.innerHTML = text.replace(/\n/g, '<br>');
                 document.getElementById('copyBtn').style.display = 'block';
                 res.scrollIntoView({ behavior: 'smooth' });
             } catch (err) { res.innerText = "Error: " + err.message; } finally { btn.innerText = "🔍 Get Value"; btn.disabled = false; }
@@ -88,4 +99,3 @@
     </script>
 </body>
 </html>
-y
