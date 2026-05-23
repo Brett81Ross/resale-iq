@@ -7,8 +7,9 @@
     <style>
         :root { --accent: #0070f3; --bg: #050505; --card: rgba(255, 255, 255, 0.08); }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; line-height: 1.6; font-size: 18px; }
-        .container { width: 100%; max-width: 500px; margin: 0 auto; padding-bottom: 250px; }
+        .container { width: 100%; max-width: 500px; margin: 0 auto; padding-bottom: 300px; }
         .header { text-align: center; margin: 30px 0; }
+        .logo { max-width: 140px; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
         #result { margin-top: 20px; white-space: pre-wrap; }
         .listing-data-box { border: 2px dashed var(--accent); padding: 15px; border-radius: 12px; margin-top: 20px; background: rgba(0, 112, 243, 0.1); }
@@ -20,26 +21,29 @@
 </head>
 <body>
     <div class="container">
-        <div class="header"><img src="logo1.png" style="max-width:120px;"><h1>Resale IQ</h1></div>
+        <div class="header"><img src="logo1.png" class="logo"><h1>Resale IQ</h1></div>
         <div class="card">
             <img id="imagePreview" style="width:100%; display:none; border-radius:12px;">
-            <div id="result">Select a photo to start.</div>
+            <div id="result">Select an option below to start.</div>
         </div>
     </div>
 
     <div class="action-bar">
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-        <button class="btn btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take/Select Photo</button>
+        <input type="file" id="galleryInput" accept="image/*" style="display:none;">
+        
+        <button class="btn btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('galleryInput').click()">📂 Choose from Gallery</button>
+        
         <button id="analyzeBtn" class="btn btn-main" style="display:none; background:#28a745;" onclick="analyzeImage()">🔍 Get Value</button>
         <button id="copyBtn" class="btn btn-secondary" style="display:none;" onclick="copyListing()">📋 Copy Listing</button>
     </div>
 
     <script>
         let resizedBase64 = "";
-        const cameraInput = document.getElementById('cameraInput');
-        
-        cameraInput.onchange = e => {
-            const file = e.target.files[0];
+
+        // Core Image Processor
+        function handleFile(file) {
             const reader = new FileReader();
             reader.onload = e => {
                 const img = new Image();
@@ -51,12 +55,15 @@
                     document.getElementById('imagePreview').src = canvas.toDataURL();
                     document.getElementById('imagePreview').style.display = 'block';
                     document.getElementById('analyzeBtn').style.display = 'block';
-                    document.getElementById('result').innerText = "Photo loaded. Ready to analyze.";
+                    document.getElementById('result').innerText = "Photo loaded. Tap 'Get Value' to analyze.";
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
-        };
+        }
+
+        document.getElementById('cameraInput').onchange = e => e.target.files[0] && handleFile(e.target.files[0]);
+        document.getElementById('galleryInput').onchange = e => e.target.files[0] && handleFile(e.target.files[0]);
 
         async function analyzeImage() {
             const btn = document.getElementById('analyzeBtn');
@@ -81,3 +88,4 @@
     </script>
 </body>
 </html>
+y
