@@ -17,13 +17,17 @@
 </head>
 <body>
     <div class="container">
-        <img src="Logo.png" alt="Resale IQ Logo" class="logo">
+        <img src="logo1.png" alt="Resale IQ Logo" class="logo">
         <h1>Resale IQ</h1>
+        
         <button class="custom-btn btn-primary" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+
         <button class="custom-btn" onclick="document.getElementById('fileInput').click()">📂 Choose from Gallery</button>
         <input type="file" id="fileInput" accept="image/*" style="display: none;">
-        <img id="imagePreview">
+
+        <img id="imagePreview" alt="Preview">
+        
         <button id="analyzeBtn" class="custom-btn btn-primary" style="display:none;" onclick="analyzeImage()">🔍 Analyze Item</button>
         <div id="result">Waiting for AI...</div>
     </div>
@@ -37,6 +41,7 @@
                 document.getElementById('imagePreview').src = e.target.result;
                 document.getElementById('imagePreview').style.display = 'inline-block';
                 document.getElementById('analyzeBtn').style.display = 'block';
+                document.getElementById('result').style.display = 'none';
             }
             reader.readAsDataURL(file);
         }
