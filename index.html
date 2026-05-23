@@ -10,20 +10,11 @@
         .container { width: 100%; max-width: 500px; padding-bottom: 300px; }
         .header { margin: 30px 0; text-align: center; }
         .logo { max-width: 140px; margin-bottom: 10px; }
-        
-        /* Larger, clearer text */
         h1 { font-size: 28px; }
         h3 { color: var(--accent); font-size: 20px; margin-top: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
         #result { font-size: 18px; color: #eee; }
-        
-        /* Card & List Styling */
         .card { background: var(--card); backdrop-filter: blur(15px); border-radius: 24px; padding: 30px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 10px; }
-        
-        /* Special block for Copy Data */
         .listing-data-box { background: rgba(0, 112, 243, 0.1); border: 2px dashed var(--accent); padding: 20px; border-radius: 16px; margin-top: 20px; }
-
         .action-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: rgba(0,0,0,0.95); border-top: 1px solid #333; display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .btn { width: 100%; max-width: 450px; padding: 20px; border-radius: 16px; border: none; font-weight: 700; font-size: 18px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
@@ -53,7 +44,34 @@
     </div>
 
     <script>
-        // Updated rendering logic for user-friendly formatting
+        let resizedBase64 = "";
+
+        // Core Image Processing Logic
+        function processImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800;
+                    canvas.height = (800 / img.width) * img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resizedBase64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = canvas.toDataURL();
+                    preview.style.display = 'block';
+                    document.getElementById('analyzeBtn').style.display = 'block';
+                    document.getElementById('result').innerText = "Image loaded. Tap 'Get Value' to proceed.";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Attach listeners correctly
+        document.getElementById('cameraInput').addEventListener('change', e => { if(e.target.files[0]) processImage(e.target.files[0]); });
+        document.getElementById('galleryInput').addEventListener('change', e => { if(e.target.files[0]) processImage(e.target.files[0]); });
+
         async function analyzeImage() {
             const btn = document.getElementById('analyzeBtn');
             const res = document.getElementById('result');
@@ -69,7 +87,6 @@
                 const data = await response.json();
                 
                 let text = data.candidates[0].content.parts[0].text;
-                // Add a special class to the Listing Data block
                 text = text.replace("### 📋 Listing Data (Ready to Copy)", '<div class="listing-data-box"><h3>📋 Listing Data (Ready to Copy)</h3>');
                 text = text.replace("Title:", "<strong>Title:</strong>");
                 text = text.replace("Price:", "<strong>Price:</strong>");
@@ -79,13 +96,19 @@
                 document.getElementById('copyBtn').style.display = 'block';
                 res.scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
-                res.innerText = "Error: Please try again.";
+                res.innerText = "Error: " + err.message;
             } finally {
                 btn.innerText = "🔍 Get Value";
                 btn.disabled = false;
             }
         }
-        // [Existing processImage and copyListing logic...]
+
+        function copyListing() {
+            const el = document.querySelector('.listing-data-box');
+            if (el) {
+                navigator.clipboard.writeText(el.innerText).then(() => alert("Copied! Paste into your selling app."));
+            }
+        }
     </script>
 </body>
 </html>
