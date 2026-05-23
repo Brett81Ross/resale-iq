@@ -1,33 +1,62 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        async function analyzeImage() {
+            const btn = document.getElementById('analyzeBtn');
+            const res = document.getElementById('result');
+            
+            if (!resizedBase64) {
+                res.innerText = "Please select or take a photo first.";
+                return;
+            }
 
-  const { image } = req.body;
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!image) return res.status(400).json({ error: 'No image provided' });
+            btn.disabled = true;
+            btn.innerText = "Analyzing...";
+            res.innerText = "Processing, please wait...";
 
-  const prompt = `
-    Act as a professional resale expert. Analyze this image and provide:
-    1. ### 📦 Item Identification: Name and model.
-    2. ### 💰 Estimated Market Value: Price range in USD.
-    3. ### 🔗 Live Market Comparisons: Provide 3-5 links to similar items online.
-    4. ### 📝 Professional Resale Description: SEO-friendly for eBay/Poshmark.
-    5. ### 💡 Pro-Tips for Selling: 3 tips on cleaning, photos, and platforms.
-    6. ### 📋 Listing Data (Ready to Copy): Title, Price, and Description formatted for easy copying.
-  `;
+            try {
+                const response = await fetch('/api/analyze', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ image: resizedBase64 }) 
+                });
+                
+                const data = await response.json();
 
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tools: [{ google_search_retrieval: {} }],
-        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: image } }] }]
-      })
-    });
+                // 1. Check for API-level errors
+                if (data.error) {
+                    res.innerText = "Server Error: " + (data.error.message || data.error);
+                    return;
+                }
 
-    const data = await response.json();
-    res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+                // 2. Deep Validation: Ensure the data structure exists
+                // We check candidates, then the content, then the parts, then the text
+                const candidate = data.candidates?.[0];
+                const text = candidate?.content?.parts?.[0]?.text;
+
+                if (!text) {
+                    console.error("Full Response:", data);
+                    res.innerText = "The analysis failed to return a valid response. Please try a different photo or angle.";
+                    return;
+                }
+
+                // 3. Formatting Logic
+                let formattedText = text;
+                
+                // Use a standard regex to wrap headers and sections
+                formattedText = formattedText.replace("### 🔗 Live Market Comparisons", '<div class="links-box"><h3>🔗 Live Market Comparisons</h3>');
+                formattedText = formattedText.replace("### 📋 Listing Data (Ready to Copy)", '</div><div class="listing-data-box"><h3>📋 Listing Data</h3>');
+                
+                // Bold formatting
+                formattedText = formattedText.replace("Title:", "<strong>Title:</strong>");
+                formattedText = formattedText.replace("Price:", "<strong>Price:</strong>");
+                formattedText = formattedText.replace("Description:", "<strong>Description:</strong>") + '</div>';
+                
+                res.innerHTML = formattedText.replace(/\n/g, '<br>');
+                document.getElementById('copyBtn').style.display = 'block';
+                res.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) { 
+                res.innerText = "Connection Error: " + err.message; 
+            } finally { 
+                btn.innerText = "🔍 Get Value"; 
+                btn.disabled = false; 
+            }
+        }
