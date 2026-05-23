@@ -17,47 +17,54 @@
 </head>
 <body>
     <div class="container">
-        <img src="logo1.png" alt="Resale IQ Logo" class="logo">
+        <img src="Logo.png" alt="Resale IQ Logo" class="logo">
         <h1>Resale IQ</h1>
-        
         <button class="custom-btn btn-primary" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
-
-        <button class="custom-btn" onclick="document.getElementById('fileInput').click()">📂 Choose from Gallery</button>
-        <input type="file" id="fileInput" accept="image/*" style="display: none;">
-
-        <img id="imagePreview" alt="Preview">
-        
+        <img id="imagePreview">
         <button id="analyzeBtn" class="custom-btn btn-primary" style="display:none;" onclick="analyzeImage()">🔍 Analyze Item</button>
         <div id="result">Waiting for AI...</div>
     </div>
     <script>
-        let base64Image = "";
-        function handleImage(event) {
+        let resizedBase64 = "";
+
+        async function handleImage(event) {
             const file = event.target.files[0];
             const reader = new FileReader();
-            reader.onload = function(e) {
-                base64Image = e.target.result.split(',')[1];
-                document.getElementById('imagePreview').src = e.target.result;
-                document.getElementById('imagePreview').style.display = 'inline-block';
-                document.getElementById('analyzeBtn').style.display = 'block';
-                document.getElementById('result').style.display = 'none';
+            reader.onload = async function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Resize to max 800px width
+                    const scale = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resizedBase64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                    document.getElementById('imagePreview').src = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('imagePreview').style.display = 'inline-block';
+                    document.getElementById('analyzeBtn').style.display = 'block';
+                };
+                img.src = e.target.result;
             }
             reader.readAsDataURL(file);
         }
+
         async function analyzeImage() {
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('result').innerText = "Analyzing securely...";
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerText = "Analyzing (Resizing image first)...";
+            
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64Image })
+                body: JSON.stringify({ image: resizedBase64 })
             });
             const data = await response.json();
-            document.getElementById('result').innerText = data.candidates[0].content.parts[0].text;
+            resultDiv.innerText = data.candidates[0].content.parts[0].text;
         }
         document.getElementById('cameraInput').addEventListener('change', handleImage);
-        document.getElementById('fileInput').addEventListener('change', handleImage);
     </script>
 </body>
 </html>
