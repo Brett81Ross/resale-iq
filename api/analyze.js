@@ -4,17 +4,24 @@ export default async function handler(req, res) {
   const { image } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!image) return res.status(400).json({ error: 'No image provided' });
+  if (!apiKey) return res.status(500).json({ error: "Server Configuration Error: API Key missing." });
+  if (!image) return res.status(400).json({ error: 'No image data received.' });
 
-  // Simplified prompt to ensure reliability
-  const prompt = `
-    Act as a professional resale expert. Analyze this image and provide:
-    1. Item Identification (Name/Model)
-    2. Estimated Market Value (Price range in USD)
-    3. Professional Resale Description (SEO-friendly)
-    4. Pro-Tips for Selling (3 bullet points)
-    5. Listing Data (Title, Price, Description ready for copy/paste)
-  `;
+  const prompt = `Act as a resale expert. Analyze this image. Return the output in this format:
+### 📦 Item Identification
+[Name/Model]
+### 💰 Estimated Market Value
+[Price range USD]
+### 🔗 Live Market Comparisons
+[Provide 3-5 links to similar listings]
+### 📝 Professional Resale Description
+[SEO-friendly description]
+### 💡 Pro-Tips for Selling
+- [3 tips]
+### 📋 Listing Data
+Title: [Title]
+Price: [Price]
+Description: [Description for copy/paste]`;
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -26,15 +33,13 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    
-    // Log the actual error to your Vercel logs if it fails
-    if (!data.candidates) {
-        console.error("API Response Data:", JSON.stringify(data));
-        return res.status(500).json({ error: "API did not return candidates. Check logs." });
+
+    if (!response.ok) {
+        throw new Error(data.error?.message || "Gemini API request failed.");
     }
 
-    res.status(200).json(data);
+    return res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
