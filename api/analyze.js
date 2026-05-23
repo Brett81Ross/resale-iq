@@ -5,9 +5,8 @@ export default async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
 
   try {
-    // We are using the 'v1beta' endpoint which is often required for the newest models
-    // We are using 'gemini-1.5-flash' explicitly
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // UPDATED: Using the Gemini 3.5 Flash model ID
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -22,7 +21,6 @@ export default async function handler(req, res) {
     
     const data = await response.json();
     
-    // Check if Google returned a specific error
     if (data.error) {
         return res.status(500).json({ error: data.error.message });
     }
