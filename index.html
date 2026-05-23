@@ -19,7 +19,40 @@
     <div class="container">
         <img src="Logo.png" alt="Resale IQ Logo" class="logo">
         <h1>Resale IQ</h1>
-        <p>Security mode active: API Key removed.</p>
+        <button class="custom-btn btn-primary" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+        <button class="custom-btn" onclick="document.getElementById('fileInput').click()">📂 Choose from Gallery</button>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <img id="imagePreview">
+        <button id="analyzeBtn" class="custom-btn btn-primary" style="display:none;" onclick="analyzeImage()">🔍 Analyze Item</button>
+        <div id="result">Waiting for AI...</div>
     </div>
+    <script>
+        let base64Image = "";
+        function handleImage(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                base64Image = e.target.result.split(',')[1];
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'inline-block';
+                document.getElementById('analyzeBtn').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+        async function analyzeImage() {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').innerText = "Analyzing securely...";
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64Image })
+            });
+            const data = await response.json();
+            document.getElementById('result').innerText = data.candidates[0].content.parts[0].text;
+        }
+        document.getElementById('cameraInput').addEventListener('change', handleImage);
+        document.getElementById('fileInput').addEventListener('change', handleImage);
+    </script>
 </body>
 </html>
