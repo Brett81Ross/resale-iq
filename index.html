@@ -18,13 +18,10 @@
 
     <div class="container">
         <img src="logo1.png" class="logo" alt="Logo">
-        
         <input type="file" id="fileInput" accept="image/*" style="display:none;">
         <button class="btn" onclick="document.getElementById('fileInput').click()">📷 Choose Item Photo</button>
-        
         <img id="preview">
         <button id="analyzeBtn" class="btn analyze-btn">Analyze Item</button>
-        
         <div id="status"></div>
         <div id="result"></div>
     </div>
@@ -35,25 +32,35 @@
         const analyzeBtn = document.getElementById('analyzeBtn');
         const status = document.getElementById('status');
         const result = document.getElementById('result');
-        let base64Image = null;
 
         fileInput.onchange = (e) => {
             const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                preview.src = event.target.result;
-                preview.style.display = 'block';
-                base64Image = event.target.result.split(',')[1];
-            };
-            reader.readAsDataURL(file);
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
         };
 
         analyzeBtn.onclick = async () => {
-            if (!base64Image) return alert("Pick a photo first!");
+            if (!preview.src || preview.src.startsWith('blob:') === false) return alert("Pick a photo first!");
             
-            status.innerText = "Analyzing...";
+            status.innerText = "Resizing and Analyzing...";
             analyzeBtn.disabled = true;
-            result.style.display = 'none';
+
+            // Resize the image to fit under Vercel's 4.5MB limit
+            const img = new Image();
+            img.src = preview.src;
+            await img.decode();
+            
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800; // Force width to 800px
+            const scale = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scale;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to base64 at 0.6 quality (reduces size further)
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
             try {
                 const response = await fetch('/api/analyze', {
@@ -63,7 +70,6 @@
                 });
 
                 const data = await response.json();
-
                 if (response.ok && data.candidates) {
                     result.innerText = data.candidates[0].content.parts[0].text;
                     result.style.display = 'block';
