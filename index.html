@@ -4,22 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Resale IQ</title>
-    
     <link rel="apple-touch-icon" href="logo1.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Resale IQ">
 
     <style>
         :root { --accent: #0070f3; --bg: #050505; --card: rgba(255, 255, 255, 0.08); }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; line-height: 1.6; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; }
         .container { width: 100%; max-width: 500px; margin: 0 auto; padding-bottom: 250px; }
-        #ios-banner { display:none; background: var(--accent); color: white; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; font-size: 14px; }
         .header { text-align: center; margin: 20px 0; }
         .logo { max-width: 140px; }
         .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid #333; }
-        #result { margin-top: 20px; font-size: 16px; }
-        
-        .action-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: #000; border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        .btn { width: 100%; max-width: 400px; padding: 15px; border-radius: 14px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; text-align: center; }
+        #result { margin-top: 20px; word-wrap: break-word; }
+        .btn { width: 100%; max-width: 400px; padding: 15px; border-radius: 14px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; margin-bottom: 10px; display: block; }
         .btn-main { background: var(--accent); color: white; }
-        .btn-secondary { background
+        .btn-secondary { background: #444; color: white; }
+        .file-input { display: none; }
+        .links-box, .desc-box, .tips-box, .listing-data-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><img src="logo1.png" class="logo"><h1>Resale IQ</h1></div>
+        <div class="card">
+            <img id="imagePreview" style="width:100%; display:none; border-radius:12px;">
+            <div id="result">Waiting for input...</div>
+        </div>
+    </div>
+
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: #000; border-top: 1px solid #333;">
+        <input type="file" id="cameraInput" class="file-input" accept="image/*" capture="environment">
+        <input type="file" id="galleryInput" class="file-input" accept="image/*">
+        <button class="btn btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('galleryInput').click()">📂 Choose Photo</button>
+        <button id="analyzeBtn" class="btn btn-main" style="display:none; background:#28a745;" onclick="analyzeImage()">🔍 Get Value</button>
+        <button id="copyBtn" class="btn btn-secondary" style="display:none;" onclick="copyListing()">📋 Copy Listing</button>
+    </div>
+
+    <script>
+        let resizedBase64 = "";
+        const resultDiv = document.getElementById('result');
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 600; canvas.height = (600 / img.width) * img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resizedBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                    document.getElementById('imagePreview').src = canvas.toDataURL();
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('analyzeBtn').style.display = 'block';
+                    resultDiv.innerText = "Photo loaded. Ready to analyze.";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('cameraInput').onchange = (e) => e.target.files[0] && handleFile(e.target.files[0]);
+        document.getElementById('galleryInput').onchange = (e) => e.target.files[0] && handleFile(e.target.files[0]);
+
+        async function analyzeImage() {
+            resultDiv.innerHTML = "Analyzing, please wait...";
+            try {
+                const response = await fetch('/api/analyze', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ image: resizedBase64 })
+                });
+                const data = await response.json();
+                
+                if (!data.candidates) throw new Error("No response from AI");
+
+                let text = data.candidates[0].content.parts[0].text;
+                text = text.replace(/###\s/g, '').replace(/📦 Item Identification/g, '<h3>📦 Item Identification</h3>')
+                           .replace(/💰 Estimated Market Value/g, '<h3>💰 Estimated Market Value</h3>')
+                           .replace(/🔗 Live Market Comparisons/g, '<div class="links-box"><h3>🔗 Live Market Comparisons</h3>')
+                           .replace(/📝 Professional Resale Description/g, '</div><div class="desc-box"><h3>📝 Professional Resale Description</h3>')
+                           .replace(/💡 Pro-Tips for Selling/g, '</div><div class="tips-box"><h3>💡 Pro-Tips for Selling</h3>')
+                           .replace(/📋 Listing Data/g, '</div><div class="listing-data-box"><h3>📋 Listing Data</h3>') + '</div>';
+                
+                resultDiv.innerHTML = text.replace(/\n/g, '<br>');
+                document.getElementById('copyBtn').style.display = 'block';
+            } catch (err) {
+                resultDiv.innerHTML = "<b>Error:</b> " + err.message;
+            }
+        }
+
+        function copyListing() {
+            const el = document.querySelector('.listing-data-box');
+            if (el) navigator.clipboard.writeText(el.innerText).then(() => alert("Copied!"));
+        }
+    </script>
+</body>
+</html>
