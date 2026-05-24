@@ -10,19 +10,25 @@ export default async function handler(req, res) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{ parts: [
-                    { text: `Analyze the item in the image and provide a professional, high-converting Facebook Marketplace listing in this exact format. Give me only the formatted text:
+                    { text: `Analyze the item in the image. Provide a high-converting Facebook Marketplace listing AND a sales strategy. 
+                    
+Format the output exactly as follows:
 
 TITLE: [Catchy Title - 60 chars max]
 
 PRICE: $[Suggested Price]
 
 DESCRIPTION:
-[Detailed, persuasive description of the item, features, and condition]
+[Detailed, persuasive, and professional description]
 
 CONDITION: [New/Used - Good/Fair/etc]
 
+SALES STRATEGY:
+- Recommended Platforms: [List platforms like Facebook Marketplace, eBay, OfferUp, Poshmark, etc.]
+- Why these platforms are best for this specific item: [Reasoning]
+
 ---
-Copy and paste the above exactly as is.` },
+Provide ONLY the text above so it is ready to be copied and pasted.` },
                     { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }
                 ]}]
             })
