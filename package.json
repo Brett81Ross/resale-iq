@@ -2,11 +2,10 @@
   "name": "resale-iq",
   "version": "1.0.0",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
     "stripe": "^15.0.0",
     "@supabase/supabase-js": "^2.40.0"
   }
 }
-
