@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resale IQ</title>
     <style>
-        body { background: #050505; color: #fff; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background: #111; padding: 20px; border-radius: 20px; border: 2px dashed #333; margin: 20px 0; }
+        body { background: #050505; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+        .card { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; margin: 20px 0; }
         img { width: 100%; border-radius: 12px; display: none; margin-bottom: 10px; }
-        button { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
         .btn-main { background: #0070f3; color: white; }
-        .btn-secondary { background: #222; color: #fff; border: 1px solid #444; }
         #result { margin-top: 20px; text-align: left; }
     </style>
 </head>
@@ -18,45 +17,34 @@
     <h1>Resale IQ</h1>
     <div class="card">
         <img id="preview">
-        <div id="controls">
-            <input type="file" id="cam" accept="image/*" capture="environment" style="display:none">
-            <button class="btn-main" onclick="document.getElementById('cam').click()">📷 Take Photo</button>
-            <button id="analyzeBtn" class="btn-secondary" style="display:none" onclick="analyze()">🔍 Get Value</button>
-        </div>
+        <input type="file" id="file" accept="image/*" style="display:none">
+        <button class="btn-main" onclick="document.getElementById('file').click()">Select Photo</button>
+        <button id="analyzeBtn" class="btn-main" style="display:none; background:#28a745;" onclick="analyze()">Get Value</button>
     </div>
     <div id="result"></div>
 
     <script>
-        let base64Image = "";
-
-        // 1. Handle Photo Selection
-        document.getElementById('cam').onchange = function(e) {
+        let base64 = "";
+        document.getElementById('file').onchange = function(e) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                const img = document.getElementById('preview');
-                img.src = event.target.result;
-                img.style.display = 'block';
-                base64Image = event.target.result.split(',')[1];
+                document.getElementById('preview').src = event.target.result;
+                document.getElementById('preview').style.display = 'block';
+                base64 = event.target.result.split(',')[1];
                 document.getElementById('analyzeBtn').style.display = 'block';
             };
             reader.readAsDataURL(e.target.files[0]);
         };
 
-        // 2. Handle AI Analysis
         async function analyze() {
-            const res = document.getElementById('result');
-            res.innerText = "Analyzing... please wait.";
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ image: base64Image })
-                });
-                const data = await response.json();
-                res.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
-            } catch (err) {
-                res.innerText = "Error: Something went wrong with the AI connection.";
-            }
+            document.getElementById('result').innerText = "Analyzing...";
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ image: base64 })
+            });
+            const data = await res.json();
+            document.getElementById('result').innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
         }
     </script>
 </body>
