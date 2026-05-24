@@ -11,6 +11,7 @@
         .analyze-btn { background: #0070f3; font-weight: bold; }
         #preview { width: 100%; border-radius: 10px; margin: 10px 0; display: none; }
         #result { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; white-space: pre-wrap; font-size: 14px; }
+        #status { margin-top: 10px; color: #ffcc00; }
     </style>
 </head>
 <body>
@@ -35,10 +36,10 @@
             status.innerText = "Analyzing...";
             const img = new Image(); img.src = preview.src; await img.decode();
             const canvas = document.createElement('canvas');
-            canvas.width = 600; canvas.height = img.height * (600 / img.width);
+            canvas.width = 400; canvas.height = img.height * (400 / img.width);
             canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            // Quality 0.3 is very small and fast
-            const base64 = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
+            // Quality 0.2 is extremely small, perfect for constrained environments
+            const base64 = canvas.toDataURL('image/jpeg', 0.2).split(',')[1];
 
             try {
                 const res = await fetch('/api/analyze', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
