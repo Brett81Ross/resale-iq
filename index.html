@@ -19,9 +19,6 @@
         .btn-success { background: #28a745; color: white; }
         
         #result { margin-top: 20px; text-align: left; line-height: 1.5; font-size: 16px; }
-        
-        /* Safer than display:none for older mobile browsers */
-        .visually-hidden { position: absolute; left: -9999px; }
     </style>
 </head>
 <body>
@@ -31,8 +28,8 @@
     <div class="card">
         <img id="preview" class="preview">
         
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="visually-hidden" onchange="handleFile(this)">
-        <input type="file" id="galleryInput" accept="image/*" class="visually-hidden" onchange="handleFile(this)">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="galleryInput" accept="image/*" style="display:none">
         
         <div class="button-row">
             <button class="btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
@@ -48,24 +45,87 @@
     <script>
         let base64 = "";
 
-        function handleFile(inputElement) {
-            const file = inputElement.files[0];
+        // The rock-solid file handler that worked previously
+        function processPhoto(event) {
+            const file = event.target.files[0];
             if (!file) return;
 
-            // 1. INSTANT UI UPDATE: Show the image and the Analyze button immediately
-            const previewImg = document.getElementById('preview');
-            previewImg.src = URL.createObjectURL(file); // This loads the preview instantly
-            previewImg.style.display = 'block';
-            document.getElementById('analyzeBtn').style.display = 'block';
-            document.getElementById('copyBtn').style.display = 'none';
-            document.getElementById('result').innerText = ""; 
+            // Reset the input so you can pick the same file again if needed
+            event.target.value = '';
 
-            // 2. BACKGROUND WORK: Resize the image silently so Vercel doesn't crash on upload
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
+                    // Shrink the image so Vercel doesn't crash on upload
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800; 
                     const scaleSize = MAX_WIDTH / img.width;
-                    canvas.
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    base64 = dataUrl.split(',')[1];
+
+                    // Show the photo and the Analyze button
+                    document.getElementById('preview').src = dataUrl;
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('analyzeBtn').style.display = 'block';
+                    document.getElementById('copyBtn').style.display = 'none';
+                    document.getElementById('result').innerText = ""; 
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Attach the listener exactly like the working test version
+        document.getElementById('cameraInput').addEventListener('change', processPhoto);
+        document.getElementById('galleryInput').addEventListener('change', processPhoto);
+
+        // The Analyze Function
+        async function analyze() {
+            const resultDiv = document.getElementById('result');
+            const btn = document.getElementById('analyzeBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerText = "Analyzing... please wait.";
+            
+            try {
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ image: base64 })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Server connection failed (Code: ${res.status}). Check your backend API file.`);
+                }
+
+                const data = await res.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                let text = data.candidates[0].content.parts[0].text;
+                resultDiv.innerHTML = text.replace(/###\s/g, '').replace(/\n/g, '<br>');
+                document.getElementById('copyBtn').style.display = 'block';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<b>Error:</b> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function copyListing() {
+            const text = document.getElementById('result').innerText;
+            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+        }
+    </script>
+</body>
+</html>
