@@ -11,13 +11,15 @@
         .analyze-btn { background: #0070f3 !important; font-weight: bold; margin-top: 20px; }
         .copy-btn { background: #28a745 !important; margin-top: 10px; display: none; }
         #preview { width: 100%; border-radius: 10px; margin-top: 15px; display: none; }
-        #status { margin-top: 15px; font-size: 14px; color: #888; }
+        #status { margin-top: 15px; font-size: 14px; color: #aaa; }
         #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 10px; text-align: left; white-space: pre-wrap; color: #ddd; display: none; }
     </style>
 </head>
 <body>
+
     <img src="logo1.png" style="width: 80px;">
     <h1>Resale IQ</h1>
+    
     <div class="card">
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
         <input type="file" id="fileInput" accept="image/*" style="display:none;">
@@ -27,6 +29,7 @@
         
         <img id="preview">
         <button id="analyzeBtn" class="btn analyze-btn">Analyze Item</button>
+        
         <div id="status"></div>
         <div id="result"></div>
         <button id="copyBtn" class="btn copy-btn">📋 Copy Listing Text</button>
@@ -44,10 +47,13 @@
         let currentFile = null;
 
         function handleFile(file) {
+            if (!file) return;
             currentFile = file;
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
-            status.innerText = "File loaded. Tap 'Analyze Item'.";
+            status.innerText = "Image selected. Tap 'Analyze Item'.";
+            result.style.display = 'none';
+            copyBtn.style.display = 'none';
         }
 
         cameraInput.onchange = (e) => handleFile(e.target.files[0]);
@@ -55,38 +61,5 @@
 
         analyzeBtn.onclick = async () => {
             if (!currentFile) return alert("Select a photo first!");
-            status.innerText = "Processing...";
-            analyzeBtn.disabled = true;
-
-            const img = new Image();
-            img.src = URL.createObjectURL(currentFile);
-            await img.decode();
-
-            const canvas = document.createElement('canvas');
-            const scale = 800 / img.width;
-            canvas.width = 800; canvas.height = img.height * scale;
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-
-            try {
-                const res = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imageBase64: base64 })
-                });
-                const data = await res.json();
-                result.innerText = data.candidates[0].content.parts[0].text;
-                result.style.display = 'block';
-                copyBtn.style.display = 'block';
-                status.innerText = "Analysis Complete!";
-            } catch (e) { status.innerText = "Error processing image."; }
-            finally { analyzeBtn.disabled = false; }
-        };
-
-        copyBtn.onclick = () => {
-            navigator.clipboard.writeText(result.innerText);
-            alert("Copied!");
-        };
-    </script>
-</body>
-</html>
+            status.innerText = "Analyzing...";
+            analyzeBtn.disabled = true
