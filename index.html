@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Resale IQ</title>
+    
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIlJlc2FsZSBJUSIsICJzaG9ydF9uYW1lIjogIlJlc2FsZSBJUSIsICJzdGFydF91cmwiOiAiLyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDUwNTA1IiwgInRoZW1lX2NvbG9yIjogIiMwMDcwZjMiLCAiaWNvbnMiOiBbeyJzcmMiOiAiL2xvZ28xLnBuZyIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIn1dfQ==">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Resale IQ">
+    <link rel="apple-touch-icon" href="logo1.png">
+
     <style>
         :root { --accent: #0070f3; --bg: #050505; --card: rgba(255, 255, 255, 0.08); }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; line-height: 1.6; font-size: 18px; }
         .container { width: 100%; max-width: 500px; margin: 0 auto; padding-bottom: 300px; }
-        .header { text-align: center; margin: 30px 0; }
+        
+        /* iOS Banner */
+        #ios-install-banner { display:none; background: var(--accent); color: white; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; font-size: 15px; }
+        
+        .header { text-align: center; margin: 20px 0; }
         .logo { max-width: 140px; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
         #result { margin-top: 20px; }
@@ -23,6 +34,10 @@
 </head>
 <body>
     <div class="container">
+        <div id="ios-install-banner">
+            <b>📱 Install App:</b> Tap "Share" below, then "Add to Home Screen" for the full app experience!
+        </div>
+
         <div class="header"><img src="logo1.png" class="logo"><h1>Resale IQ</h1></div>
         <div class="card">
             <img id="imagePreview" style="width:100%; display:none; border-radius:12px;">
@@ -31,71 +46,3 @@
     </div>
 
     <div class="action-bar">
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-        <input type="file" id="galleryInput" accept="image/*" style="display:none;">
-        
-        <button class="btn btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('galleryInput').click()">📂 Choose from Gallery</button>
-        
-        <button id="analyzeBtn" class="btn btn-main" style="display:none; background:#28a745;" onclick="analyzeImage()">🔍 Get Value</button>
-        <button id="copyBtn" class="btn btn-secondary" style="display:none;" onclick="copyListing()">📋 Copy Listing</button>
-    </div>
-
-    <script>
-        let resizedBase64 = "";
-
-        function handleFile(file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 600; canvas.height = (600 / img.width) * img.height;
-                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resizedBase64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                    document.getElementById('imagePreview').src = canvas.toDataURL();
-                    document.getElementById('imagePreview').style.display = 'block';
-                    document.getElementById('analyzeBtn').style.display = 'block';
-                    document.getElementById('result').innerText = "Photo loaded. Tap 'Get Value' to analyze.";
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        document.getElementById('cameraInput').onchange = e => e.target.files[0] && handleFile(e.target.files[0]);
-        document.getElementById('galleryInput').onchange = e => e.target.files[0] && handleFile(e.target.files[0]);
-
-        async function analyzeImage() {
-            const btn = document.getElementById('analyzeBtn');
-            const res = document.getElementById('result');
-            btn.disabled = true; btn.innerText = "Analyzing...";
-            try {
-                const response = await fetch('/api/analyze', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ image: resizedBase64 })});
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                
-                let text = data.candidates[0].content.parts[0].text;
-                
-                // Strip markdown and inject clean HTML
-                text = text.replace(/###\s/g, '');
-                text = text.replace(/📦 Item Identification/g, '<h3>📦 Item Identification</h3>');
-                text = text.replace(/💰 Estimated Market Value/g, '<h3>💰 Estimated Market Value</h3>');
-                text = text.replace(/🔗 Live Market Comparisons/g, '<div class="links-box"><h3>🔗 Live Market Comparisons</h3>');
-                text = text.replace(/📝 Professional Resale Description/g, '</div><div class="desc-box"><h3>📝 Professional Resale Description</h3>');
-                text = text.replace(/💡 Pro-Tips for Selling/g, '</div><div class="tips-box"><h3>💡 Pro-Tips for Selling</h3>');
-                text = text.replace(/📋 Listing Data/g, '</div><div class="listing-data-box"><h3>📋 Listing Data</h3>') + '</div>';
-                
-                res.innerHTML = text.replace(/\n/g, '<br>');
-                document.getElementById('copyBtn').style.display = 'block';
-                res.scrollIntoView({ behavior: 'smooth' });
-            } catch (err) { res.innerText = "Error: " + err.message; } finally { btn.innerText = "🔍 Get Value"; btn.disabled = false; }
-        }
-
-        function copyListing() {
-            const el = document.querySelector('.listing-data-box');
-            if (el) navigator.clipboard.writeText(el.innerText).then(() => alert("Copied!"));
-        }
-    </script>
-</body>
-</html>
