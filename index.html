@@ -38,9 +38,10 @@
         };
 
         analyzeBtn.onclick = async () => {
-            if (!preview.src.startsWith('blob:')) return alert("Select photo first!");
+            if (!preview.src || preview.src.startsWith('blob:') === false) return alert("Select photo first!");
             status.innerText = "Analyzing...";
             analyzeBtn.disabled = true;
+            result.style.display = 'none';
 
             const img = new Image();
             img.src = preview.src;
@@ -57,16 +58,20 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ imageBase64: base64 })
                 });
+                
                 const data = await res.json();
+                
                 if (res.ok && data.candidates) {
                     result.innerText = data.candidates[0].content.parts[0].text;
                     result.style.display = 'block';
                     status.innerText = "Done!";
                 } else {
-                    status.innerText = "Error: " + (data.error || "Unknown");
+                    // This explicitly extracts the error message instead of showing [object Object]
+                    const errMsg = data.error?.message || data.error || JSON.stringify(data);
+                    status.innerText = "Error: " + errMsg;
                 }
             } catch (e) {
-                status.innerText = "Error: " + e.message;
+                status.innerText = "Connection Error: " + e.message;
             } finally {
                 analyzeBtn.disabled = false;
             }
