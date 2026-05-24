@@ -3,36 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Mode</title>
+    <title>Resale IQ</title>
     <style>
-        body { background: #000; color: white; padding: 20px; font-family: sans-serif; text-align: center; }
-        .preview { max-width: 300px; margin: 20px 0; border: 2px solid white; display: none; }
+        body { background: #050505; color: #fff; font-family: sans-serif; padding: 20px; text-align: center; }
+        .card { background: #111; padding: 20px; border-radius: 20px; border: 2px dashed #333; margin: 20px 0; }
+        img { width: 100%; border-radius: 12px; display: none; margin-bottom: 10px; }
+        button { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-main { background: #0070f3; color: white; }
+        .btn-secondary { background: #222; color: #fff; border: 1px solid #444; }
+        #result { margin-top: 20px; text-align: left; }
     </style>
 </head>
 <body>
-    <h1>Test App</h1>
-    <input type="file" id="fileInput" accept="image/*">
-    <img id="imagePreview" class="preview">
-    <p id="status">Select an image to test.</p>
+    <h1>Resale IQ</h1>
+    <div class="card">
+        <img id="preview">
+        <div id="controls">
+            <input type="file" id="cam" accept="image/*" capture="environment" style="display:none">
+            <button class="btn-main" onclick="document.getElementById('cam').click()">📷 Take Photo</button>
+            <button id="analyzeBtn" class="btn-secondary" style="display:none" onclick="analyze()">🔍 Get Value</button>
+        </div>
+    </div>
+    <div id="result"></div>
 
     <script>
-        const input = document.getElementById('fileInput');
-        const img = document.getElementById('imagePreview');
-        const status = document.getElementById('status');
+        let base64Image = "";
 
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                status.innerText = "Processing...";
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    status.innerText = "Success! Image loaded.";
-                };
-                reader.readAsDataURL(file);
-            }
+        // 1. Handle Photo Selection
+        document.getElementById('cam').onchange = function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.getElementById('preview');
+                img.src = event.target.result;
+                img.style.display = 'block';
+                base64Image = event.target.result.split(',')[1];
+                document.getElementById('analyzeBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(e.target.files[0]);
         };
+
+        // 2. Handle AI Analysis
+        async function analyze() {
+            const res = document.getElementById('result');
+            res.innerText = "Analyzing... please wait.";
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ image: base64Image })
+                });
+                const data = await response.json();
+                res.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+            } catch (err) {
+                res.innerText = "Error: Something went wrong with the AI connection.";
+            }
+        }
     </script>
 </body>
 </html>
