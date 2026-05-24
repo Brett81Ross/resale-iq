@@ -7,23 +7,24 @@
     <style>
         body { background: #050505; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
         .card { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; margin: 20px 0; }
-        .btn { width: 100%; padding: 15px; background: #0070f3; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn { width: 100%; padding: 15px; margin: 10px 0; background: #222; color: white; border: 1px solid #444; border-radius: 10px; cursor: pointer; }
+        .analyze { background: #0070f3 !important; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>Resale IQ</h1>
     <div class="card">
-        <p id="statusMsg">Connecting to system...</p>
-        <div id="authArea" style="display:none;">
-            <button class="btn" id="loginBtn">Sign In with Google</button>
-        </div>
-        <div id="memberArea" style="display:none;">
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-            <input type="file" id="fileInput" accept="image/*" style="display:none;">
-            <button class="btn" onclick="document.getElementById('cameraInput').click()">📷 Take New Photo</button>
-            <button class="btn" onclick="document.getElementById('fileInput').click()">📂 Choose Existing File</button>
-            <br><br>
-            <button class="btn" style="background:#444;" id="logoutBtn">Sign Out</button>
+        <p id="statusMsg">Connecting...</p>
+        
+        <div id="controls" style="display:none;">
+            <label>1. Take Photo:</label>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="btn">
+            
+            <label>2. Choose File:</label>
+            <input type="file" id="fileInput" accept="image/*" class="btn">
+            
+            <button id="analyzeBtn" class="btn analyze">Analyze Item</button>
+            <button id="logoutBtn" class="btn" style="background:#444;">Sign Out</button>
         </div>
     </div>
 
@@ -43,26 +44,19 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // Fallback: If it takes too long, just show the button anyway
-        setTimeout(() => {
-            if(document.getElementById('statusMsg').innerText === "Connecting to system...") {
-                document.getElementById('statusMsg').innerText = "System ready (Manual mode).";
-                document.getElementById('authArea').style.display = 'block';
-            }
-        }, 3000);
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.getElementById('statusMsg').innerText = `Welcome, ${user.displayName}`;
-                document.getElementById('authArea').style.display = 'none';
-                document.getElementById('memberArea').style.display = 'block';
+                document.getElementById('statusMsg').innerText = "Logged in as " + user.displayName;
+                document.getElementById('controls').style.display = 'block';
             } else {
-                document.getElementById('statusMsg').innerText = "Ready to Sign In.";
-                document.getElementById('authArea').style.display = 'block';
-                document.getElementById('memberArea').style.display = 'none';
+                document.getElementById('statusMsg').innerHTML = '<button class="btn" id="loginBtn">Sign In with Google</button>';
                 document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
             }
         });
+
+        document.getElementById('analyzeBtn').onclick = () => {
+            alert("Analyze button is working! Now we just need to connect the AI.");
+        };
 
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
     </script>
