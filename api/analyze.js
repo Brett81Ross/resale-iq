@@ -3,6 +3,7 @@ export default async function handler(req, res) {
     
     try {
         const { imageBase64 } = req.body;
+        // Using the latest Gemini 3.5 Flash model
         const MODEL = "gemini-3.5-flash"; 
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -10,24 +11,24 @@ export default async function handler(req, res) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{ parts: [
-                    { text: `Analyze the item in the image. Generate a professional listing and sales strategy. 
-                    
-Return ONLY this formatted text (no intro or outro):
+                    { text: `You are an expert reseller. Analyze the item in the image and provide a professional, high-converting Facebook Marketplace ad.
+
+Return ONLY this formatted text, ready to copy and paste:
 
 [TITLE]
-(Write a catchy, optimized title here)
+(Catchy title, max 60 chars)
 
 [PRICE]
 (Suggested price)
 
 [DESCRIPTION]
-(Write a detailed description: what it is, key features, exact condition, and why it is a great buy. Keep it professional.)
+(Detailed physical description: what it is, key features, exact condition, and why it's a great buy)
 
 [CONDITION]
 (New / Used - Excellent / Good / Fair)
 
 [WHERE TO SELL & WHY]
-(List the top 2 platforms and provide a 1-sentence explanation for each on why it will sell fast there.)
+(Top 2 platforms and a 1-sentence reason for each)
 
 ---` },
                     { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }
