@@ -3,8 +3,8 @@ export default async function handler(req, res) {
     
     try {
         const { imageBase64 } = req.body;
-        // Using the most advanced current production model identifier
-        const MODEL = "gemini-1.5-pro-002"; 
+        // Use the correct model ID for the new 3.5 series
+        const MODEL = "gemini-3.5-flash"; 
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: "POST",
