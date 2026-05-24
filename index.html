@@ -10,7 +10,6 @@
         .card { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; margin: 20px 0; }
         img.preview { width: 100%; border-radius: 12px; display: none; margin-bottom: 10px; }
         
-        /* Two button layout */
         .button-row { display: flex; gap: 10px; margin-bottom: 10px; }
         .button-row button { flex: 1; }
         
@@ -20,6 +19,9 @@
         .btn-success { background: #28a745; color: white; }
         
         #result { margin-top: 20px; text-align: left; line-height: 1.5; font-size: 16px; }
+        
+        /* Safer than display:none for older mobile browsers */
+        .visually-hidden { position: absolute; left: -9999px; }
     </style>
 </head>
 <body>
@@ -29,8 +31,8 @@
     <div class="card">
         <img id="preview" class="preview">
         
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
-        <input type="file" id="galleryInput" accept="image/*" style="display:none">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="visually-hidden" onchange="handleFile(this)">
+        <input type="file" id="galleryInput" accept="image/*" class="visually-hidden" onchange="handleFile(this)">
         
         <div class="button-row">
             <button class="btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
@@ -46,38 +48,24 @@
     <script>
         let base64 = "";
 
-        // Function to handle both photo taking and file choosing
-        function handleFile(file) {
+        function handleFile(inputElement) {
+            const file = inputElement.files[0];
             if (!file) return;
 
+            // 1. INSTANT UI UPDATE: Show the image and the Analyze button immediately
+            const previewImg = document.getElementById('preview');
+            previewImg.src = URL.createObjectURL(file); // This loads the preview instantly
+            previewImg.style.display = 'block';
+            document.getElementById('analyzeBtn').style.display = 'block';
+            document.getElementById('copyBtn').style.display = 'none';
+            document.getElementById('result').innerText = ""; 
+
+            // 2. BACKGROUND WORK: Resize the image silently so Vercel doesn't crash on upload
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() {
-                    // Shrink the image so the server doesn't crash
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800; 
                     const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                    base64 = dataUrl.split(',')[1];
-
-                    // Display the preview and buttons
-                    document.getElementById('preview').src = dataUrl;
-                    document.getElementById('preview').style.display = 'block';
-                    document.getElementById('analyzeBtn').style.display = 'block';
-                    document.getElementById('copyBtn').style.display = 'none';
-                    document.getElementById('result').innerText = ""; 
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Attach the handler to both inputs
-        document.getElementById('cameraInput').onchange = (e) => handleFile(e.target.
+                    canvas.
