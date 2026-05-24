@@ -4,14 +4,10 @@ export default async function handler(req, res) {
     try {
         const { imageBase64 } = req.body;
         
-        // Timeout after 10 seconds to avoid 500 errors
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-
+        // We use the 'flash' model as it is the most lightweight and fastest
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            signal: controller.signal,
             body: JSON.stringify({
                 contents: [{
                     parts: [
@@ -22,12 +18,11 @@ export default async function handler(req, res) {
             })
         });
 
-        clearTimeout(timeout);
         const data = await response.json();
+        if (!response.ok) return res.status(500).json({ error: data.error?.message || "Gemini Error" });
         
-        if (!response.ok) return res.status(500).json({ error: data.error?.message || "Gemini API Error" });
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ error: error.name === 'AbortError' ? "Request timed out" : error.message });
+        res.status(500).json({ error: error.message });
     }
 }
