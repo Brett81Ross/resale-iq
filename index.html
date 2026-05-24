@@ -7,17 +7,15 @@
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 400px; text-align: center; }
-        .logo { width: 80px; margin-bottom: 20px; }
-        .btn { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: #fff; font-size: 16px; cursor: pointer; }
+        .btn { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; background: #333; color: #fff; border: none; font-size: 16px; cursor: pointer; }
         .analyze-btn { background: #0070f3; font-weight: bold; }
         #preview { width: 100%; border-radius: 10px; margin: 10px 0; display: none; }
         #result { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; display: none; white-space: pre-wrap; font-size: 14px; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <img src="logo1.png" class="logo" alt="Logo">
+        <img src="logo1.png" style="width: 80px;" alt="Logo">
         <input type="file" id="fileInput" accept="image/*" style="display:none;">
         <button class="btn" onclick="document.getElementById('fileInput').click()">📷 Choose Item Photo</button>
         <img id="preview">
@@ -40,45 +38,35 @@
         };
 
         analyzeBtn.onclick = async () => {
-            if (!preview.src || preview.src.startsWith('blob:') === false) return alert("Pick a photo first!");
-            
-            status.innerText = "Resizing and Analyzing...";
+            if (!preview.src.startsWith('blob:')) return alert("Select photo first!");
+            status.innerText = "Analyzing...";
             analyzeBtn.disabled = true;
 
-            // Resize the image to fit under Vercel's 4.5MB limit
             const img = new Image();
             img.src = preview.src;
             await img.decode();
-            
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800; // Force width to 800px
-            const scale = MAX_WIDTH / img.width;
-            canvas.width = MAX_WIDTH;
-            canvas.height = img.height * scale;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // Convert to base64 at 0.6 quality (reduces size further)
-            const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+            canvas.width = 800;
+            canvas.height = img.height * (800 / img.width);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            const base64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
             try {
-                const response = await fetch('/api/analyze', {
+                const res = await fetch('/api/analyze', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imageBase64: base64Image })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ imageBase64: base64 })
                 });
-
-                const data = await response.json();
-                if (response.ok && data.candidates) {
+                const data = await res.json();
+                if (res.ok && data.candidates) {
                     result.innerText = data.candidates[0].content.parts[0].text;
                     result.style.display = 'block';
-                    status.innerText = "Analysis Complete!";
+                    status.innerText = "Done!";
                 } else {
-                    status.innerText = "Error: " + (data.error || "Failed to analyze.");
+                    status.innerText = "Error: " + (data.error || "Unknown");
                 }
-            } catch (err) {
-                status.innerText = "Connection Error: " + err.message;
+            } catch (e) {
+                status.innerText = "Error: " + e.message;
             } finally {
                 analyzeBtn.disabled = false;
             }
