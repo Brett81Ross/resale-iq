@@ -4,102 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resale IQ</title>
-    <link rel="apple-touch-icon" href="logo1.png">
     <style>
         body { background: #050505; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
         .card { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; margin: 20px 0; }
-        img.preview { width: 100%; border-radius: 12px; display: none; margin-bottom: 10px; }
-        
-        .button-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .button-row button { flex: 1; }
-        
-        button { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .btn-main { background: #0070f3; color: white; }
-        .btn-secondary { background: #333; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        
-        #result { margin-top: 20px; text-align: left; line-height: 1.5; font-size: 16px; }
-        #authSection { margin-bottom: 20px; font-size: 14px; color: #aaa; }
-        .badge { background: #333; padding: 4px 8px; border-radius: 20px; font-size: 12px; color: #fff; font-weight: bold; }
+        #authBtn { width: 100%; padding: 15px; background: #0070f3; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <img src="logo1.png" style="width: 80px; margin-bottom: 10px;">
-    <h1 style="margin-top: 0;">Resale IQ</h1>
+    <img src="logo1.png" style="width: 80px;">
+    <h1>Resale IQ</h1>
     
-    <div id="authSection" class="card" style="margin: 10px 0; padding: 12px;">
-        <span id="authStatus">Loading account status...</span>
-        <button id="authBtn" class="btn-main" style="width: auto; padding: 8px 15px; margin-left: 10px; display: none; font-size: 14px;"></button>
+    <div class="card">
+        <p id="statusMsg">Initializing...</p>
+        <button id="authBtn" style="display:none;">Sign In with Google</button>
     </div>
-
-    <div id="appInterface" style="display: none;">
-        <div class="card">
-            <img id="preview" class="preview">
-            
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-            <input type="file" id="galleryInput" accept="image/*" style="display:none;">
-            
-            <div class="button-row">
-                <button class="btn-main" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
-                <button class="btn-secondary" onclick="document.getElementById('galleryInput').click()">📂 Choose File</button>
-            </div>
-            
-            <button id="analyzeBtn" class="btn-success" style="display:none;" onclick="analyze()">🔍 Get Value</button>
-        </div>
-    </div>
-    
-    <div id="result"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Verified Firebase connection configuration
-        const firebaseConfig = {
+        const config = {
             apiKey: "AIzaSyCHw58VHbvQxji437vYTxgakBHdRYiFVa0",
             authDomain: "resale-iq.firebaseapp.com",
             projectId: "resale-iq",
             storageBucket: "resale-iq.firebasestorage.app",
             messagingSenderId: "496480241751",
-            appId: "1:496480241751:web:148d1da5cd3e322edcbb12",
-            measurementId: "G-0D3NL4Z2YC"
+            appId: "1:496480241751:web:148d1da5cd3e322edcbb12"
         };
 
-        // Initialize Firebase services
-        const app = initializeApp(firebaseConfig);
+        const app = initializeApp(config);
         const auth = getAuth(app);
-        const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        let currentUser = null;
-        let base64 = "";
-
-        // UI Element Selectors
-        const authStatus = document.getElementById('authStatus');
-        const authBtn = document.getElementById('authBtn');
-        const appInterface = document.getElementById('appInterface');
-        const resultDiv = document.getElementById('result');
-        const btn = document.getElementById('analyzeBtn');
-
-        // Monitor User Authentication State Changes
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
+            const status = document.getElementById('statusMsg');
+            const btn = document.getElementById('authBtn');
             if (user) {
-                currentUser = user;
-                appInterface.style.display = 'block';
-                authBtn.style.display = 'inline-block';
-                authBtn.innerText = "Log Out";
-                authBtn.className = "btn-secondary";
-                authBtn.onclick = () => signOut(auth);
-
-                // Check and pull user's scan count from database
-                const userDocRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocRef);
-                let currentScans = 0;
-
-                if (userDoc.exists()) {
-                    currentScans = userDoc.data().scanCount || 0;
-                } else {
-                    // Create base account entry if it's their first login
-                    await setDoc(userDocRef, { email: user.email, scanCount: 0,
+                status.innerHTML = `Welcome, <b>${user.displayName}</b>!`;
+                btn.style.display = 'none';
+            } else {
+                status.innerText = "System ready.";
+                btn.style.display = 'block';
+                btn.onclick = () => {
+                    signInWithPopup(auth, provider).catch((error) => {
+                        status.innerText = "Error: " + error.message;
+                    });
+                };
+            }
+        });
+    </script>
+</body>
+</html>
