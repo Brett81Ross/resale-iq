@@ -2,8 +2,9 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).end();
 
     try {
-        const { imagesBase64 } = req.body; // Expecting an array of strings
+        const { imagesBase64 } = req.body; // Now expects an array
         
+        // Map the array of base64 strings into the format Gemini requires
         const imageParts = imagesBase64.map(base64 => ({
             inline_data: { mime_type: "image/jpeg", data: base64 }
         }));
@@ -29,7 +30,10 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
-        if (!response.ok) return res.status(500).json({ error: data.error?.message });
+        
+        if (!response.ok) {
+            return res.status(500).json({ error: data.error?.message || "Gemini API Error" });
+        }
         
         res.status(200).json(data);
     } catch (error) {
