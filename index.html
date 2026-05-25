@@ -45,12 +45,14 @@
     <script>
         const gallery = document.getElementById('gallery'), status = document.getElementById('status'), 
               result = document.getElementById('result'), hist = document.getElementById('historyContainer');
+        let allImages = [];
 
         function toggleHistory() { hist.style.display = (hist.style.display === 'block') ? 'none' : 'block'; }
 
-        async function processImages(files) {
-            gallery.innerHTML = ""; status.innerText = "Analyzing..."; result.innerText = "";
-            let base64Array = [];
+        async function handleFiles(files) {
+            gallery.innerHTML = ""; 
+            allImages = []; 
+            status.innerText = "Processing images...";
             
             for (const file of Array.from(files)) {
                 const b64 = await new Promise(r => {
@@ -63,23 +65,30 @@
                     };
                     reader.readAsDataURL(file);
                 });
-                base64Array.push(b64);
+                allImages.push(b64);
             }
+            runAnalysis();
+        }
 
-            const res = await fetch('/api/analyze', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ imagesBase64: base64Array }) 
-            });
-            const data = await res.json();
-            if (res.ok) {
-                const text = data.candidates[0].content.parts[0].text;
-                result.innerText = text; status.innerText = "Done!";
-                let h = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
-                h.unshift(text); if (h.length > 5) h.pop();
-                localStorage.setItem('resaleHistory', JSON.stringify(h));
-                renderHistory();
-            } else { status.innerText = "Error: " + (data.error || "Failed"); }
+        async function runAnalysis() {
+            if (allImages.length === 0) return;
+            status.innerText = "Analyzing " + allImages.length + " photos...";
+            try {
+                const res = await fetch('/api/analyze', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ imagesBase64: allImages }) 
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const text = data.candidates[0].content.parts[0].text;
+                    result.innerText = text; status.innerText = "Done!";
+                    let h = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
+                    h.unshift(text); if (h.length > 5) h.pop();
+                    localStorage.setItem('resaleHistory', JSON.stringify(h));
+                    renderHistory();
+                } else { status.innerText = "Error: " + (data.error || "Failed"); }
+            } catch (e) { status.innerText = "Error: " + e.message; }
         }
 
         function renderHistory() {
@@ -93,8 +102,8 @@
             });
         }
 
-        document.getElementById('fileInput').onchange = (e) => processImages(e.target.files);
-        document.getElementById('cameraInput').onchange = (e) => processImages(e.target.files);
+        document.getElementById('fileInput').onchange = (e) => handleFiles(e.target.files);
+        document.getElementById('cameraInput').onchange = (e) => handleFiles(e.target.files);
         window.onload = renderHistory;
     </script>
 </body>
