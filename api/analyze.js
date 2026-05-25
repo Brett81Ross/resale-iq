@@ -11,15 +11,16 @@ export default async function handler(req, res) {
                 contents: [{
                     parts: [
                         { text: `Act as an expert reseller. Create a high-converting marketplace listing for the provided item. 
-Provide the output in this exact, clean format:
+Follow this format strictly. 
+IMPORTANT: Do NOT include any information about shipping, delivery, or logistics. Focus only on the item itself and the sale.
 
 TITLE: [Write a catchy, optimized title]
 PRICE: [Suggest a competitive local market price]
 CONDITION: [Specify condition clearly]
-WHERE TO SELL: [Suggest the best platform: e.g., Facebook Marketplace, eBay, Poshmark]
+WHERE TO SELL: [Suggest the best platform: e.g., Facebook Marketplace, Craigslist]
 
 --- COPY AND PASTE BELOW THIS LINE ---
-[Write a professional, persuasive ad description ready for a buyer to read. Include features, benefits, and call to action.]
+[Write a professional, persuasive ad description ready for a buyer to read. Include features, benefits, and a call to action for local pickup only.]
 ---` },
                         { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }
                     ]
