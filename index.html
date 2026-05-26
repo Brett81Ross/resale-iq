@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResaleIQ</title>
+    <title>MachZero</title>
     <style>
         body { background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .app-container { max-width: 400px; width: 100%; }
@@ -45,7 +45,7 @@
 <body>
     <div class="app-container">
         <div class="logo-container">
-            <img src="logo1.png" alt="ResaleIQ" class="main-logo">
+            <img src="logo1.png" alt="MachZero" class="main-logo">
             <div class="brand-text">100% FREE for Early Testers • ⚡PRO Version Coming Soon</div>
         </div>
 
@@ -76,12 +76,11 @@
         <input type="number" id="expense-amount" placeholder="Amount ($)">
         <button class="btn btn-orange" id="add-expense-btn">Add Expense</button>
 
-        <div class="section-title">Inventory Log</div>
+        <div class="section-title">MachZero Inventory Log</div>
         <div id="status-display">Waiting for analysis...</div>
     </div>
 
     <script>
-        // Global Variables for Math
         let aiEstimatedValue = 0;
         let totalExpenses = 0;
 
@@ -93,9 +92,7 @@
         const addExpenseBtn = document.getElementById('add-expense-btn');
         const status = document.getElementById('status-display');
 
-        // Function to Calculate and Update the UI
         function calculateProfit() {
-            // If the sourcing cost is completely empty, keep profit at $0.00
             if (sourcingCostInput.value === '') {
                 netProfitDisplay.textContent = '$0.00';
                 netProfitDisplay.style.color = '#34c759';
@@ -105,17 +102,15 @@
             const sourcingCost = parseFloat(sourcingCostInput.value) || 0;
             const netProfit = aiEstimatedValue - sourcingCost - totalExpenses;
             
-            // Format for currency and negative signs
             if (netProfit < 0) {
                 netProfitDisplay.textContent = '-$' + Math.abs(netProfit).toFixed(2);
-                netProfitDisplay.style.color = '#ff3b30'; // Red for negative
+                netProfitDisplay.style.color = '#ff3b30';
             } else {
                 netProfitDisplay.textContent = '$' + netProfit.toFixed(2);
-                netProfitDisplay.style.color = '#34c759'; // Green for positive
+                netProfitDisplay.style.color = '#34c759';
             }
         }
 
-        // Event Listeners for Math Updates
         sourcingCostInput.addEventListener('input', calculateProfit);
 
         addExpenseBtn.addEventListener('click', () => {
@@ -123,12 +118,9 @@
             if (expense > 0) {
                 totalExpenses += expense;
                 expenseTotalDisplay.textContent = `Total: $${totalExpenses.toFixed(2)}`;
-                
-                // Clear the inputs
                 expenseAmountInput.value = '';
                 expenseDescInput.value = '';
                 
-                // Visual feedback on button
                 const originalText = addExpenseBtn.textContent;
                 addExpenseBtn.textContent = 'Expense Added!';
                 addExpenseBtn.style.backgroundColor = '#34c759';
@@ -141,45 +133,38 @@
             }
         });
 
-        // Info Box Toggle Logic
         function showInfo(type) {
             const box = document.getElementById('info-box');
-            
-            // Toggle logic so you can click the button again to hide the box
             if (box.dataset.currentType === type && box.style.display === 'block') {
                 box.style.display = 'none';
                 box.dataset.currentType = '';
                 return;
             }
-            
             box.style.display = 'block';
             box.dataset.currentType = type;
             
             if (type === 'profit') {
                 box.innerHTML = `
                     <div class="info-header">Understanding Net Profit</div>
-                    <p>Your Net Profit is the actual money you take home after all costs are deducted. It gives you a realistic view of your true margins.</p>
+                    <p>Your Net Profit is the actual money you take home after all costs are deducted.</p>
                     <ul>
-                        <li><strong>AI Estimated Value:</strong> The expected selling price based on current market data and analysis.</li>
-                        <li><strong>Sourcing Cost:</strong> What you initially paid for the item (enter this below).</li>
-                        <li><strong>Expenses:</strong> Extra costs added throughout the process like mileage, cleaning, repairs, or platform fees.</li>
+                        <li><strong>AI Estimated Value:</strong> Market value analysis.</li>
+                        <li><strong>Sourcing Cost:</strong> Initial purchase price.</li>
+                        <li><strong>Expenses:</strong> Additional costs like shipping or cleaning.</li>
                     </ul>
-                    <p style="color: #34c759; font-weight: bold; text-align: center;">Estimated Value - (Cost + Expenses) = Net Profit</p>
                 `;
             } else if (type === 'cost') {
                 box.innerHTML = `
-                    <div class="info-header">Sourcing Cost & Expenses Guide</div>
-                    <p>Accurate cost tracking is essential for true profit calculation and keeping proper records for tax reporting.</p>
+                    <div class="info-header">Cost Tracking</div>
+                    <p>Accurate tracking is key to MachZero precision.</p>
                     <ul>
-                        <li><strong>Sourcing Cost:</strong> Enter the exact amount you paid for the item at the time of purchase, making sure to include any sales tax.</li>
-                        <li><strong>Record Keeping:</strong> Always save your physical or digital receipts for your tax records.</li>
-                        <li><strong>Additional Expenses:</strong> Use the Add Expense section below for any extra costs incurred (e.g., fuel, repairs, shipping materials).</li>
+                        <li><strong>Sourcing Cost:</strong> Include sales tax if applicable.</li>
+                        <li><strong>Expenses:</strong> Use the Add Expense section for overhead.</li>
                     </ul>
                 `;
             }
         }
 
-        // Camera and Upload Logic
         const galleryInput = document.getElementById('gallery-input');
         const cameraInput = document.getElementById('camera-input');
 
@@ -188,64 +173,3 @@
         
         galleryInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
         cameraInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-        function handleFile(file) {
-            if (!file) return;
-            status.textContent = "Analyzing item...";
-            
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-                    sendToServer(compressedBase64);
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function sendToServer(base64Data) {
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imagesBase64: [base64Data] })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Server error occurred');
-                }
-                
-                const rawText = data.candidates[0].content.parts[0].text;
-                
-                // Parse out the Estimated Market Value from AI response
-                // Looks for "Estimated Market Value:" and captures the first number after it
-                const match = rawText.match(/Estimated Market Value:[^\d]*(\d+(\.\d+)?)/i);
-                if (match && match[1]) {
-                    aiEstimatedValue = parseFloat(match[1]);
-                    calculateProfit(); // Trigger calculation automatically
-                }
-
-                // Format the text with double line breaks for readability
-                const spacedText = rawText.trim().split('\n').filter(line => line.trim() !== '').join('\n\n');
-                status.textContent = spacedText;
-
-            } catch (err) {
-                status.textContent = "Error: " + err.message;
-            }
-        }
-    </script>
-</body>
-</html>
