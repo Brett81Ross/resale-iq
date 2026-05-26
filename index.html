@@ -129,55 +129,31 @@
             justify-content: center;
             gap: 8px;
             color: #ffffff;
+            font-family: inherit;
+            text-decoration: none;
+            box-sizing: border-box;
         }
 
+        .btn-blue { background-color: #007aff; }
+        .btn-green { background-color: #34c759; }
         .btn-orange { background-color: #ff9f0a; margin-top: 8px; }
 
-        /* BULLETPROOF DIRECT INPUT STYLING */
-        /* Eliminates layers, labels, and hacks. Staged to native click detection. */
-        .hardware-file-field {
-            display: block;
-            width: 100%;
-            margin-bottom: 12px;
-            color: transparent; /* Hides default "No file chosen" browser label text cleanly */
-            outline: none;
-            cursor: pointer;
-        }
-
-        /* Customizing the actual native clickable region for Select Photos */
-        #file-gallery-input::file-selector-button {
-            width: 100%;
-            padding: 16px;
+        /* Fallback visible uploader element styling */
+        .fallback-input-container {
+            background-color: #161616;
+            border: 1px dashed #333333;
             border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            color: #ffffff;
-            background-color: #007aff; /* Blue button core theme */
-            cursor: pointer;
-            content: "📁 Select Photos";
+            padding: 12px;
+            margin-bottom: 16px;
+            text-align: center;
         }
 
-        /* Customizing the actual native clickable region for Take Photo */
-        #camera-capture-input::file-selector-button {
+        .visible-file-input {
             width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
+            color: #8a8a8f;
+            font-size: 0.9rem;
+            background: transparent;
             border: none;
-            color: #ffffff;
-            background-color: #34c759; /* Green button core theme */
-            cursor: pointer;
-            content: "📷 Take Photo";
-        }
-
-        /* Webkit layout handling compatibility fixes */
-        #file-gallery-input::-webkit-file-upload-button {
-            width: 100%; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 600; border: none; color: #ffffff; background-color: #007aff; cursor: pointer;
-        }
-        #camera-capture-input::-webkit-file-upload-button {
-            width: 100%; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 600; border: none; color: #ffffff; background-color: #34c759; cursor: pointer;
         }
 
         /* Section Headings */
@@ -285,8 +261,17 @@
             <button class="info-trigger" onclick="openModal('sourcing-cost')">ⓘ</button>
         </div>
 
-        <input type="file" id="file-gallery-input" class="hardware-file-field" accept="image/*" onchange="processSelectedImage(this)">
-        <input type="file" id="camera-capture-input" class="hardware-file-field" accept="image/*" capture="environment" onchange="processSelectedImage(this)">
+        <button class="btn btn-blue" onclick="forceGalleryPicker()">
+            <span>📁</span> Select Photos
+        </button>
+        
+        <button class="btn btn-green" onclick="forceCameraPicker()">
+            <span>📷</span> Take Photo
+        </button>
+
+        <div class="fallback-input-container" id="safe-input-block">
+            <input type="file" id="universal-file-node" class="visible-file-input" accept="image/*" onchange="processSelectedImage(this)">
+        </div>
 
         <div class="section-label">Add Expense</div>
 
@@ -322,10 +307,6 @@
         // Synchronize copyright timestamp data automatically 
         document.getElementById('copyright-year').textContent = new Date().getFullYear();
 
-        // Fallback programmatic label customization for standard old-spec engines
-        document.getElementById('file-gallery-input').setAttribute('data-label', '📁 Select Photos');
-        document.getElementById('camera-capture-input').setAttribute('data-label', '📷 Take Photo');
-
         // Object containing text payloads for descriptive popups
         const infoExplainerData = {
             'net-profit': 'Your Net Profit calculates your total sales values minus item sourcing fees, marketplace shipping rates, and calculated mileage/operating expenses.',
@@ -348,11 +329,29 @@
             if (e.target === this) closeModal();
         });
 
-        // Background handler for processing image file objects once selected or captured
+        // Direct hardware invocations bypassing standard browser abstraction barriers
+        function forceGalleryPicker() {
+            const fileNode = document.getElementById('universal-file-node');
+            fileNode.removeAttribute('capture');
+            fileNode.click();
+        }
+
+        function forceCameraPicker() {
+            const fileNode = document.getElementById('universal-file-node');
+            fileNode.setAttribute('capture', 'environment');
+            fileNode.click();
+        }
+
+        // Processing hook using standard FileReader loop
         function processSelectedImage(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
                 const targetFile = inputElement.files[0];
-                console.log("Image received successfully for processing: ", targetFile.name);
+                
+                const imageReader = new FileReader();
+                imageReader.onload = function(e) {
+                    console.log("File loaded successfully into app buffer: ", targetFile.name);
+                };
+                imageReader.readAsDataURL(targetFile);
             }
         }
     </script>
