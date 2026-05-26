@@ -32,7 +32,9 @@
         
         .section-title { font-size: 1.2rem; margin: 20px 0 10px 0; font-weight: bold; }
         .hidden-uploader { display: none; }
-        #status-display { margin-top: 15px; background: #1c1c1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; font-size: 0.95rem; border-left: 4px solid #007aff; line-height: 1.6; color: #eee; }
+        
+        /* Updated font-size to 1.1rem */
+        #status-display { margin-top: 15px; background: #1c1c1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; font-size: 1.1rem; border-left: 4px solid #007aff; line-height: 1.6; color: #eee; }
     </style>
 </head>
 <body>
@@ -132,7 +134,11 @@
                     throw new Error(data.error || 'Server error occurred');
                 }
                 
-                status.textContent = data.candidates[0].content.parts[0].text;
+                // Get the raw text, filter out empty lines, and join with a double break for the gap
+                const rawText = data.candidates[0].content.parts[0].text;
+                const spacedText = rawText.trim().split('\\n').filter(line => line.trim() !== '').join('\\n\\n');
+                
+                status.textContent = spacedText;
             } catch (err) {
                 status.textContent = "Error: " + err.message;
             }
