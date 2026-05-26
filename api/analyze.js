@@ -29,7 +29,7 @@ export default async function handler(req, res) {
                         
                         1. MARKET DATA: Estimate current price range (Low, Mid, High).
                         2. SELL-THROUGH SIGNAL: Rate the speed (Fast/Average/Slow) and explain why.
-                        3. PRICING RATIONALE: Identify top 3 features justifying the price.
+                        3. PRICING RATIONALE: Identify top 3 features visible in the photos that justify the price.
                         4. OPTIMIZED LISTING: 
                            TITLE: [Catchy, optimized title]
                            PRICE: [Suggested price]
