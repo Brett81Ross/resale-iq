@@ -81,6 +81,18 @@
         .camera-btn { background: #28a745; }
         .expense-btn { background: #f39c12; margin-top: 5px; }
         
+        /* Interactive History Log Panels */
+        .history-list { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 15px; text-align: left; }
+        .history-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; position: relative; }
+        .history-meta { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 6px; }
+        .history-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%; }
+        .history-metrics { display: flex; gap: 15px; font-size: 13px; }
+        .metric-cogs { color: #ff808b; }
+        .metric-rev { color: #28a745; }
+        .delete-log-btn { position: absolute; right: 14px; top: 14px; background: transparent; border: none; color: #444; font-size: 16px; cursor: pointer; padding: 0; }
+        .delete-log-btn:hover { color: #dc3545; }
+        .empty-history-text { color: #444; font-size: 14px; font-style: italic; margin-top: 10px; }
+
         /* Bottom Drawer Panel Layout */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: flex-end; }
         .modal-content { background: #161616; width: 100%; max-width: 420px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 25px; box-sizing: border-box; text-align: left; border-top: 1px solid #2a2a2a; transform: translateY(100%); transition: transform 0.3s ease-out; max-height: 80vh; overflow-y: auto; }
@@ -93,7 +105,6 @@
         #gallery { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; width: 100%; justify-content: center; }
         #gallery img { width: 75px; height: 75px; object-fit: cover; border-radius: 8px; border: 1px solid #222; }
         
-        /* Interactive Output Results Engine + Visual Error Banners */
         #result { display: none; background: #111; padding: 16px; border-radius: 10px; margin-top: 20px; text-align: left; font-size: 14px; border: 1px solid #222; line-height: 1.6; width: 100%; box-sizing: border-box; white-space: pre-wrap; }
         #result.error-state { border-color: #dc3545; background: rgba(220, 53, 69, 0.05); color: #ff808b; }
         .retry-action-link { color: #0070f3; font-weight: bold; text-decoration: underline; cursor: pointer; display: block; margin-top: 8px; }
@@ -139,6 +150,9 @@
         
         <div id="gallery"></div>
         <div id="result"></div>
+
+        <div class="section-title">Inventory Log</div>
+        <div class="history-list" id="historyContainer"></div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeHelpModal()">
@@ -152,7 +166,6 @@
         let allImages = [];
         let currentSourcingCostCache = 0;
 
-        // Global Help Guides Core Matrix
         const guides = {
             sourcing: `
                 <h4>💡 Master Sourcing Cost Guide</h4>
@@ -196,7 +209,6 @@
             const overlay = document.getElementById('modalOverlay');
             const content = document.getElementById('modalContent');
             document.getElementById('modalTargetContent').innerHTML = guides[type] || '';
-            
             overlay.style.display = 'flex';
             setTimeout(() => { content.classList.add('open'); }, 10);
         }
@@ -208,7 +220,6 @@
             setTimeout(() => { overlay.style.display = 'none'; }, 300);
         }
 
-        // Advanced Image Optimization & Edge Check Pre-processing Engine
         async function handleFiles(files) {
             currentSourcingCostCache = document.getElementById('costInput').value || 0;
             allImages = []; 
@@ -217,14 +228,13 @@
             const resultBox = document.getElementById('result');
             
             gallery.innerHTML = "";
-            resultBox.className = ""; // Remove any residual error color blocks
+            resultBox.className = ""; 
             resultBox.style.display = "none";
             
             const fileArray = Array.from(files);
             if (fileArray.length === 0) return;
 
             for (const file of fileArray) {
-                // Safeguard against unsupported raw system media dumps
                 if (!file.type.startsWith('image/')) {
                     displayErrorUI("Invalid format detected. Please select standard images.");
                     return;
@@ -239,7 +249,7 @@
                             img.onerror = () => reject(new Error("Corrupted media architecture."));
                             img.onload = () => {
                                 const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 1024; // Balanced dynamic resolution capping
+                                const MAX_WIDTH = 1024; 
                                 let width = img.width;
                                 let height = img.height;
 
@@ -254,7 +264,6 @@
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(img, 0, 0, width, height);
                                 
-                                // Clean dynamic downscale array compilation
                                 const base64Result = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
                                 resolve(base64Result);
                             };
@@ -277,16 +286,14 @@
             runAnalysis(currentSourcingCostCache);
         }
 
-        // Live API Execution Loop with Connection Timeouts & Error Banners
         async function runAnalysis(cost) {
             const resultBox = document.getElementById('result');
             resultBox.className = ""; 
             resultBox.style.display = 'block';
             resultBox.innerText = "Analyzing item properties with Gemini 3.5...";
             
-            // AbortController setup to catch hang-ups or dead connectivity
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second hard gateway drop ceiling
+            const timeoutId = setTimeout(() => controller.abort(), 25000); 
             
             try {
                 const res = await fetch('/api/analyze', { 
@@ -306,8 +313,19 @@
                 const priceMatch = text.match(/\$?(\d+)/);
                 const estimatedSalePrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
                 
+                // Extra logic to extract a clean item name fallback line
+                const lines = text.split('\n');
+                const titleFallback = lines[0].replace(/[#*`]/g, '').trim() || "Analyzed Inventory Item";
+
                 let h = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
-                h.unshift({ text, cost: parseFloat(cost), price: estimatedSalePrice, status: 'Active', timestamp: Date.now() });
+                h.unshift({ 
+                    id: Date.now().toString(),
+                    title: titleFallback,
+                    text, 
+                    cost: parseFloat(cost), 
+                    price: estimatedSalePrice, 
+                    timestamp: Date.now() 
+                });
                 localStorage.setItem('resaleHistory', JSON.stringify(h));
                 
                 calculateFinances();
@@ -321,7 +339,6 @@
             }
         }
 
-        // Centralized Visual Error UI Renderer
         function displayErrorUI(message) {
             const resultBox = document.getElementById('result');
             resultBox.style.display = 'block';
@@ -335,16 +352,28 @@
             if (!desc || amt <= 0) return;
 
             let exps = JSON.parse(localStorage.getItem('expenses') || '[]');
-            exps.push({ desc, amt, timestamp: Date.now() });
+            exps.push({ id: Date.now().toString(), desc, amt, timestamp: Date.now() });
             localStorage.setItem('expenses', JSON.stringify(exps));
             
             document.getElementById('expDesc').value = "";
             document.getElementById('expAmt').value = "";
             
             calculateFinances();
-            alert(`Logged expense: "${desc}" for $${amt.toFixed(2)}`);
         }
 
+        // Expanded Delete Controller for Item Removals
+        function deleteHistoryItem(id, type) {
+            if (!confirm("Are you sure you want to remove this log entry?")) return;
+            
+            const storageKey = type === 'item' ? 'resaleHistory' : 'expenses';
+            let dataset = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            dataset = dataset.filter(entry => entry.id !== id);
+            localStorage.setItem(storageKey, JSON.stringify(dataset));
+            
+            calculateFinances();
+        }
+
+        // Financial Accumulator + Dynamic History UI List Renderer
         function calculateFinances() {
             const items = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
             const exps = JSON.parse(localStorage.getItem('expenses') || '[]');
@@ -353,22 +382,42 @@
             let totalCogs = 0;
             let operationalExpenses = 0;
 
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = "";
+
+            // Render Scanned Items History Logs
             items.forEach(item => {
                 accumulatedRevenue += item.price;
                 totalCogs += item.cost;
+
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.innerHTML = `
+                    <div class="history-meta">
+                        <span>📦 ITEM SCAN</span>
+                        <span>${new Date(item.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div class="history-title">${item.title}</div>
+                    <div class="history-metrics">
+                        <span class="metric-cogs">Sourced: $${item.cost.toFixed(2)}</span>
+                        <span class="metric-rev">Est Value: $${item.price.toFixed(2)}</span>
+                    </div>
+                    <button class="delete-log-btn" onclick="deleteHistoryItem('${item.id}', 'item')">✕</button>
+                `;
+                container.appendChild(card);
             });
 
+            // Render Operational Expenses Logs
             exps.forEach(e => {
                 operationalExpenses += e.amt;
-            });
 
-            const trueNetProfit = accumulatedRevenue - totalCogs - operationalExpenses;
-            document.getElementById('netProfit').innerText = trueNetProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-
-        document.getElementById('fileInput').onchange = (e) => handleFiles(e.target.files);
-        document.getElementById('cameraInput').onchange = (e) => handleFiles(e.target.files);
-        window.onload = calculateFinances;
-    </script>
-</body>
-</html>
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.style.borderColor = '#3a2307';
+                card.innerHTML = `
+                    <div class="history-meta">
+                        <span style="color: #f39c12;">💸 EXPENSE LOG</span>
+                        <span>${new Date(e.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div class="history-title">${e.desc}</div>
+                    <div class="history-metrics">
