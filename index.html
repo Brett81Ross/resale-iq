@@ -114,16 +114,34 @@
             right: 16px;
         }
 
+        /* Hardware Action Trigger Group */
+        .hardware-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        /* Active, invisible native inputs stacked safely behind buttons */
+        .hidden-hardware-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 1;
+        }
+
         /* UI Action Buttons & Native Labels */
         .btn, .label-btn-trigger {
+            position: relative;
             width: 100%;
             padding: 16px;
             border-radius: 12px;
             font-size: 1rem;
             font-weight: 600;
             border: none;
-            cursor: pointer;
-            margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -132,11 +150,13 @@
             box-sizing: border-box;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            z-index: 2;
+            pointer-events: none; /* Passes the actual finger tap straight through to the transparent file input overlay */
         }
 
         .btn-blue { background-color: #007aff; }
         .btn-green { background-color: #34c759; }
-        .btn-orange { background-color: #ff9f0a; margin-top: 8px; }
+        .btn-orange { background-color: #ff9f0a; margin-top: 8px; pointer-events: auto; cursor: pointer; }
 
         /* Section Headings */
         .section-label {
@@ -145,16 +165,6 @@
             font-weight: 600;
             margin: 24px 0 16px 0;
             color: #ffffff;
-        }
-
-        /* Zero-size completely hidden inputs that still respond to native tap forwarding */
-        .hidden-hardware-input {
-            opacity: 0;
-            position: absolute;
-            z-index: -1;
-            width: 0;
-            height: 0;
-            pointer-events: none;
         }
 
         /* Information Modals/Popups */
@@ -253,15 +263,19 @@
             <button class="info-trigger" onclick="openModal('sourcing-cost')">ⓘ</button>
         </div>
 
-        <input type="file" id="file-gallery-input" class="hidden-hardware-input" accept="image/*" onchange="processSelectedImage(this)">
-        <label for="file-gallery-input" class="label-btn-trigger btn-blue">
-            <span>📁</span> Select Photos
-        </label>
+        <div class="hardware-container">
+            <input type="file" id="file-gallery-input" class="hidden-hardware-input" accept="image/*" onchange="processSelectedImage(this)">
+            <label for="file-gallery-input" class="label-btn-trigger btn-blue">
+                <span>📁</span> Select Photos
+            </label>
+        </div>
         
-        <input type="file" id="camera-capture-input" class="hidden-hardware-input" accept="image/*" capture="environment" onchange="processSelectedImage(this)">
-        <label for="camera-capture-input" class="label-btn-trigger btn-green">
-            <span>📷</span> Take Photo
-        </label>
+        <div class="hardware-container">
+            <input type="file" id="camera-capture-input" class="hidden-hardware-input" accept="image/*" capture="environment" onchange="processSelectedImage(this)">
+            <label for="camera-capture-input" class="label-btn-trigger btn-green">
+                <span>📷</span> Take Photo
+            </label>
+        </div>
 
         <div class="section-label">Add Expense</div>
 
@@ -310,6 +324,7 @@
             document.getElementById('info-modal').classList.add('active');
         }
 
+        // Closes info popups securely
         function closeModal() {
             document.getElementById('info-modal').classList.remove('active');
         }
