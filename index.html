@@ -5,70 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resale IQ</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; }
         .container { width: 100%; max-width: 400px; text-align: center; }
-        .logo { width: 250px; margin-bottom: 20px; }
-        .dashboard { background: #222; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .btn { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; background: #333; color: #fff; font-size: 16px; cursor: pointer; }
-        .analyze-btn { background: #0070f3; }
-        .camera-btn { background: #28a745; }
-        .expense-btn { background: #f39c12; }
         
-        /* Modernized Integrated Input Container */
-        .input-wrapper { position: relative; width: 100%; margin: 10px 0; }
-        input { width: 100%; padding: 14px 50px 14px 14px; border-radius: 8px; border: 1px solid #333; font-size: 16px; background: #111; color: #fff; box-sizing: border-box; outline: none; transition: border-color 0.2s; }
+        /* Matching your exact image layout styles */
+        .logo-container { width: 100%; overflow: hidden; margin-bottom: 10px; display: flex; justify-content: center; }
+        .logo { width: 100%; max-width: 320px; height: auto; object-fit: contain; }
+        
+        .dashboard { background: #1a1a1a; padding: 25px 15px; border-radius: 12px; margin-bottom: 20px; width: 100%; box-sizing: border-box; }
+        .dashboard h3 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
+        
+        .section-title { font-size: 18px; font-weight: 600; margin: 25px 0 15px 0; text-align: center; }
+        
+        /* Modern Input Design with Integrated Info Button */
+        .input-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
+        input { width: 100%; padding: 16px 50px 16px 16px; border-radius: 10px; border: 1px solid #2a2a2a; font-size: 16px; background: #111; color: #fff; box-sizing: border-box; outline: none; }
+        input::placeholder { color: #555; }
         input:focus { border-color: #0070f3; }
         
-        /* Sleek Inline Info Button */
-        .info-toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: #222; color: #0070f3; border: 1px solid #0070f3; border-radius: 50%; width: 26px; height: 26px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s; }
-        .info-toggle-btn:hover { background: #0070f3; color: #fff; }
-
-        /* Help Section Window */
-        .help-section { display: none; background: #111; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left; font-size: 13px; color: #ccc; line-height: 1.5; border: 1px solid #0070f3; width: 100%; box-sizing: border-box; }
-        .help-section h4 { margin-top: 0; margin-bottom: 8px; color: #0070f3; }
-        .help-section ul { margin: 5px 0; padding-left: 18px; }
-        .help-section li { margin-bottom: 6px; }
+        .info-toggle-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: transparent; color: #0056b3; border: none; font-size: 20px; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; }
         
-        #gallery { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
-        #gallery img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
-        #result { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; font-size: 14px; }
+        /* Exact Button Color Matching From Your Screen Snapshots */
+        .btn { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 10px; border: none; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; }
+        .select-btn { background: #0070f3; }
+        .camera-btn { background: #28a745; }
+        .expense-btn { background: #f39c12; color: #fff; margin-top: 5px; }
+        
+        /* Smooth Mobile Bottom Drawer Modal for Help Info */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: flex-end; }
+        .modal-content { background: #161616; width: 100%; max-width: 420px; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 25px; box-sizing: border-box; text-align: left; border-top: 1px solid #2a2a2a; transform: translateY(100%); transition: transform 0.3s ease-out; }
+        .modal-content.open { transform: translateY(0); }
+        .modal-content h4 { margin-top: 0; color: #0070f3; font-size: 18px; margin-bottom: 15px; }
+        .modal-content ul { padding-left: 20px; margin: 0; }
+        .modal-content li { margin-bottom: 12px; color: #ccc; font-size: 14px; line-height: 1.5; }
+        .close-modal-btn { width: 100%; padding: 12px; background: #222; border: 1px solid #333; color: #fff; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: 600; }
+
+        #gallery { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; width: 100%; justify-content: center; }
+        #gallery img { width: 75px; height: 75px; object-fit: cover; border-radius: 8px; border: 1px solid #222; }
+        
+        #result { display: none; background: #111; padding: 16px; border-radius: 10px; margin-top: 20px; text-align: left; font-size: 14px; border: 1px solid #222; line-height: 1.6; width: 100%; box-sizing: border-box; white-space: pre-wrap; }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="logo1.png" class="logo" alt="Logo">
+        <div class="logo-container">
+            <img src="logo1.png" class="logo" alt="Resale IQ">
+        </div>
         
         <div class="dashboard">
             <h3>Net Profit: $<span id="netProfit">0</span></h3>
         </div>
 
         <div class="input-wrapper">
-            <input type="number" id="costInput" placeholder="Sourcing Cost ($)">
-            <button class="info-toggle-btn" id="infoBtn" onclick="toggleHelp()">i</button>
-        </div>
-        
-        <div class="help-section" id="helpSection">
-            <h4>💡 Master Sourcing Cost Guide</h4>
-            <ul>
-                <li><b>Thrift & Garage Sales:</b> Use the exact register price. If you bought a bundle, divide the total receipt cost by the number of usable items.</li>
-                <li><b>Auctions & Bulk Lots:</b> Add the item cost, buyer’s premiums, taxes, and shipping costs altogether, then divide by the total items to find the cost per unit.</li>
-                <li><b>Found, Gifted, or Free Items:</b> Enter <b>$0</b>. If you spent money on gas to pick it up, log that down below under general expenses instead.</li>
-                <li><b>Repairs & Cleaning:</b> If you had to buy a replacement part or specific cleaner just for this item, add that directly to this sourcing cost.</li>
-            </ul>
+            <input type="number" id="costInput" placeholder="Sourcing Cost ($)" inputmode="decimal">
+            <button class="info-toggle-btn" onclick="openHelpModal()">ⓘ</button>
         </div>
 
-        <button class="btn analyze-btn" onclick="document.getElementById('fileInput').click()">📁 Select Photos</button>
+        <button class="btn select-btn" onclick="document.getElementById('fileInput').click()">📁 Select Photos</button>
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
 
         <button class="btn camera-btn" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 
-        <h3>Add Expense</h3>
+        <div class="section-title">Add Expense</div>
+        
         <div class="input-wrapper">
             <input type="text" id="expDesc" placeholder="Description (e.g., Mileage)">
         </div>
         <div class="input-wrapper">
-            <input type="number" id="expAmt" placeholder="Amount ($)">
+            <input type="number" id="expAmt" placeholder="Amount ($)" inputmode="decimal">
         </div>
         <button class="btn expense-btn" onclick="addExpense()">Add Expense</button>
         
@@ -76,25 +81,38 @@
         <div id="result"></div>
     </div>
 
+    <div class="modal-overlay" id="modalOverlay" onclick="closeHelpModal()">
+        <div class="modal-content" id="modalContent" onclick="event.stopPropagation()">
+            <h4>💡 Master Sourcing Cost Guide</h4>
+            <ul>
+                <li><b>Thrift & Garage Sales:</b> Use the exact register price. If you bought a bundle, divide the total receipt cost by the number of usable items.</li>
+                <li><b>Auctions & Bulk Lots:</b> Add the item cost, buyer’s premiums, taxes, and shipping costs altogether, then divide by the total items to find the cost per unit.</li>
+                <li><b>Found, Gifted, or Free Items:</b> Enter <b>$0</b>. If you spent money on gas to pick it up, log that down below under general expenses instead.</li>
+                <li><b>Repairs & Cleaning:</b> If you had to buy a replacement part or specific cleaner just for this item, add that directly to this sourcing cost.</li>
+            </ul>
+            <button class="close-modal-btn" onclick="closeHelpModal()">Got It</button>
+        </div>
+    </div>
+
     <script>
         let allImages = [];
 
-        function toggleHelp() {
-            const helpSection = document.getElementById('helpSection');
-            const infoBtn = document.getElementById('infoBtn');
-            if (helpSection.style.display === 'block') {
-                helpSection.style.display = 'none';
-                infoBtn.style.background = '#222';
-                infoBtn.style.color = '#0070f3';
-                infoBtn.style.borderColor = '#0070f3';
-            } else {
-                helpSection.style.display = 'block';
-                infoBtn.style.background = '#0070f3';
-                infoBtn.style.color = '#fff';
-                infoBtn.style.borderColor = '#0070f3';
-            }
+        // Smooth Mobile Overlay Controls
+        function openHelpModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            overlay.style.display = 'flex';
+            setTimeout(() => { content.classList.add('open'); }, 10);
         }
 
+        function closeHelpModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            content.classList.remove('open');
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
+
+        // Image Slicing and Encoding Logic
         async function handleFiles(files) {
             const cost = document.getElementById('costInput').value || 0;
             allImages = []; 
@@ -116,30 +134,90 @@
                     reader.readAsDataURL(file);
                 });
                 allImages.push(b64);
+                
+                const thumb = document.createElement('img');
+                thumb.src = `data:image/jpeg;base64,${b64}`;
+                document.getElementById('gallery').appendChild(thumb);
             }
             runAnalysis(cost);
         }
 
+        // Live API Execution Loop
         async function runAnalysis(cost) {
-            document.getElementById('result').innerText = "Analyzing...";
-            const res = await fetch('/api/analyze', { 
-                method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ imagesBase64: allImages }) 
-            });
-            const data = await res.json();
-            const text = data.candidates[0].content.parts[0].text;
-            document.getElementById('result').innerText = text;
+            const resultBox = document.getElementById('result');
+            resultBox.style.display = 'block';
+            resultBox.innerText = "Analyzing item properties with Gemini 3.5...";
+            
+            try {
+                const res = await fetch('/api/analyze', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ imagesBase64: allImages }) 
+                });
+                const data = await res.json();
+                
+                if (!res.ok) throw new Error(data.error || "Failed analysis iteration");
+                
+                const text = data.candidates[0].content.parts[0].text;
+                resultBox.innerText = text;
+                
+                // Parse generated price range to auto-log expected value
+                const priceMatch = text.match(/\$?(\d+)/);
+                const estimatedSalePrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+                
+                let h = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
+                h.unshift({ text, cost: parseFloat(cost), price: estimatedSalePrice, status: 'Active', timestamp: Date.now() });
+                localStorage.setItem('resaleHistory', JSON.stringify(h));
+                
+                calculateFinances();
+            } catch (err) {
+                resultBox.innerText = "Execution Error: " + err.message;
+            }
         }
 
+        // Expense Ledger Persistence Flow
         function addExpense() {
-            const desc = document.getElementById('expDesc').value;
+            const desc = document.getElementById('expDesc').value.trim();
             const amt = parseFloat(document.getElementById('expAmt').value) || 0;
             if (!desc || amt <= 0) return;
-            alert("Expense added: " + desc);
+
+            let exps = JSON.parse(localStorage.getItem('expenses') || '[]');
+            exps.push({ desc, amt, timestamp: Date.now() });
+            localStorage.setItem('expenses', JSON.stringify(exps));
+            
+            document.getElementById('expDesc').value = "";
+            document.getElementById('expAmt').value = "";
+            
+            calculateFinances();
+            alert(`Logged expense: "${desc}" for $${amt.toFixed(2)}`);
+        }
+
+        // Full Math Aggregator for Live Profit Output
+        function calculateFinances() {
+            const items = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
+            const exps = JSON.parse(localStorage.getItem('expenses') || '[]');
+            
+            let accumulatedRevenue = 0;
+            let totalCogs = 0;
+            let operationalExpenses = 0;
+
+            items.forEach(item => {
+                // For demonstration, if active or sold, account for gross valuation adjustments
+                accumulatedRevenue += item.price;
+                totalCogs += item.cost;
+            });
+
+            exps.forEach(e => {
+                operationalExpenses += e.amt;
+            });
+
+            const trueNetProfit = accumulatedRevenue - totalCogs - operationalExpenses;
+            document.getElementById('netProfit').innerText = trueNetProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         document.getElementById('fileInput').onchange = (e) => handleFiles(e.target.files);
         document.getElementById('cameraInput').onchange = (e) => handleFiles(e.target.files);
+        window.onload = calculateFinances;
     </script>
 </body>
 </html>
