@@ -75,7 +75,7 @@
 
     <script>
         document.getElementById('gallery-trigger-btn').addEventListener('click', () => document.getElementById('file-gallery-input').click());
-        document.getElementById('camera-capture-input').addEventListener('click', () => document.getElementById('camera-capture-input').click());
+        document.getElementById('camera-trigger-btn').addEventListener('click', () => document.getElementById('camera-capture-input').click());
 
         function showHelp(topic) {
             const modal = document.getElementById('help-modal');
@@ -97,6 +97,8 @@
             const file = input.files[0];
             const statusDiv = document.getElementById('status-display');
             
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
             const process = async () => {
                 statusDiv.style.display = 'block';
                 statusDiv.style.borderColor = '#007aff';
@@ -112,34 +114,31 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ imagesBase64: [base64String] }) 
                         });
+                        
                         const data = await response.json();
                         
                         if (response.ok) {
                             statusDiv.style.borderColor = '#34c759';
                             statusDiv.textContent = data.candidates[0].content.parts[0].text;
-                        } else if (response.status === 429) {
-                            let waitTime = 30; // Default
+                        } 
+                        else if (response.status === 429) {
                             statusDiv.style.borderColor = '#ff9f0a';
-                            const countdown = setInterval(() => {
-                                statusDiv.textContent = "Rate limit reached. Retrying in " + waitTime + "s...";
-                                if (waitTime <= 0) {
-                                    clearInterval(countdown);
-                                    process(); // Auto-retry
-                                }
-                                waitTime--;
-                            }, 1000);
-                        } else {
+                            statusDiv.textContent = "Rate limit reached. Waiting 35s to auto-retry...";
+                            await sleep(35000); 
+                            process(); 
+                        } 
+                        else {
                             statusDiv.style.borderColor = '#ff3b30';
                             statusDiv.textContent = "Error: " + (data.error || "Server issue.");
                         }
                     } catch (error) {
                         statusDiv.style.borderColor = '#ff3b30';
-                        statusDiv.textContent = "Connection error. Please check your internet.";
+                        statusDiv.textContent = "Connection error. Check internet.";
                     }
                 };
             };
             process();
         }
     </script>
-</body>
+    </body>
 </html>
