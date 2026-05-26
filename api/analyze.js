@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     try {
         const { imagesBase64 } = req.body;
 
-        // Validation: Check if images exist
+        // Validation: Check if images exist and are an array
         if (!imagesBase64 || !Array.isArray(imagesBase64) || imagesBase64.length === 0) {
             return res.status(400).json({ error: "No images provided" });
         }
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
             inline_data: { mime_type: "image/jpeg", data: base64 }
         }));
 
-        // Send to Gemini
+        // Send to Gemini - using the model name: gemini-1.5-flash
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -43,17 +43,17 @@ export default async function handler(req, res) {
         
         // Error handling for non-200 responses
         if (!response.ok) {
-            console.error("Gemini API Error:", data);
+            console.error("Gemini API Error details:", JSON.stringify(data));
             return res.status(500).json({ 
-                error: data.error?.message || "Gemini API returned an error" 
+                error: data.error?.message || "Gemini API error occurred" 
             });
         }
         
-        // Return valid JSON
+        // Return successful response
         res.status(200).json(data);
 
     } catch (error) {
-        console.error("Server Error:", error);
+        console.error("Server execution error:", error);
         res.status(500).json({ error: error.message || "Internal server error" });
     }
 }
