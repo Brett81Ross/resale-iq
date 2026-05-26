@@ -17,7 +17,7 @@
             flex-direction: column;
         }
 
-        /* Top Header Container - Stripped of padding/margins for edge-to-edge layout */
+        /* Top Header Container - Flushed edge-to-edge */
         .brand-header {
             width: 100%;
             margin: 0;
@@ -29,13 +29,13 @@
         .main-logo {
             width: 100%;
             height: auto;
-            aspect-ratio: 1 / 1; /* Forces a perfect square ratio */
+            aspect-ratio: 1 / 1;
             display: block;
             object-fit: contain;
-            background-color: #ffffff; /* Preserves your crisp white background */
+            background-color: #ffffff;
         }
 
-        /* Content Wrapper for the rest of the App UI */
+        /* Content Wrapper for the App UI */
         .app-wrapper {
             flex: 1;
             padding: 16px;
@@ -144,9 +144,12 @@
             color: #ffffff;
         }
 
-        /* Hidden Inputs for File/Camera API Triggers */
+        /* Hidden Native File Input Elements */
         .hidden-uploader {
-            display: none;
+            display: none !important;
+            visibility: hidden;
+            width: 0;
+            height: 0;
         }
 
         /* Information Modals/Popups */
@@ -248,11 +251,11 @@
         <input type="file" id="file-gallery-input" class="hidden-uploader" accept="image/*" onchange="processSelectedImage(this)">
         <input type="file" id="camera-capture-input" class="hidden-uploader" accept="image/*" capture="environment" onchange="processSelectedImage(this)">
 
-        <button class="btn btn-blue" onclick="triggerGallery()">
+        <button class="btn btn-blue" onclick="triggerGallery(event)">
             <span>📁</span> Select Photos
         </button>
         
-        <button class="btn btn-green" onclick="triggerCamera()">
+        <button class="btn btn-green" onclick="triggerCamera(event)">
             <span>📷</span> Take Photo
         </button>
 
@@ -312,12 +315,14 @@
             if (e.target === this) closeModal();
         });
 
-        // Trigger mechanisms to route stylized buttons to native hardware processes
-        function triggerGallery() {
+        // Fixed Trigger mechanisms to explicitly click native HTML file elements
+        function triggerGallery(e) {
+            if(e) e.preventDefault();
             document.getElementById('file-gallery-input').click();
         }
 
-        function triggerCamera() {
+        function triggerCamera(e) {
+            if(e) e.preventDefault();
             document.getElementById('camera-capture-input').click();
         }
 
@@ -326,6 +331,7 @@
             if (inputElement.files && inputElement.files[0]) {
                 const targetFile = inputElement.files[0];
                 console.log("Image received successfully for processing: ", targetFile.name);
+                alert("File Selected successfully: " + targetFile.name);
             }
         }
     </script>
