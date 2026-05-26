@@ -22,7 +22,7 @@
         .hidden-uploader { position: absolute !important; opacity: 0 !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
         .section-label { text-align: center; font-size: 1.1rem; font-weight: 600; margin: 24px 0 16px 0; }
         
-        #status-display { background-color: #1c1c1e; border-radius: 12px; padding: 16px; margin: 16px 0; font-size: 0.9rem; color: #ffffff; border-left: 4px solid #007aff; display: none; white-space: pre-wrap; transition: opacity 0.5s; }
+        #status-display { background-color: #1c1c1e; border-radius: 12px; padding: 20px; margin: 16px 0; font-size: 1.1rem; line-height: 1.6; color: #ffffff; border-left: 4px solid #007aff; display: none; white-space: pre-wrap; transition: opacity 0.5s; }
         .pulsing { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         
@@ -101,20 +101,16 @@
             let stepIndex = 0;
 
             const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-            const updateStatus = () => {
+            const statusInterval = setInterval(() => {
                 statusDiv.textContent = steps[stepIndex % steps.length];
                 stepIndex++;
-            };
-
-            const statusInterval = setInterval(updateStatus, 2000);
+            }, 2000);
             
             const process = async () => {
                 statusDiv.style.display = 'block';
                 statusDiv.classList.add('pulsing');
                 statusDiv.style.borderColor = '#007aff';
-                updateStatus();
-
+                
                 const reader = new FileReader();
                 reader.readAsDataURL(input.files[0]);
                 reader.onload = async () => {
@@ -126,28 +122,29 @@
                             body: JSON.stringify({ imagesBase64: [base64String] }) 
                         });
                         
-                        const data = await response.json();
                         clearInterval(statusInterval);
                         statusDiv.classList.remove('pulsing');
                         
                         if (response.ok) {
+                            const data = await response.json();
                             statusDiv.style.borderColor = '#34c759';
                             statusDiv.textContent = data.candidates[0].content.parts[0].text;
                         } 
                         else if (response.status === 429) {
                             statusDiv.style.borderColor = '#ff9f0a';
-                            statusDiv.textContent = "Rate limit reached. Retrying in 35s...";
+                            statusDiv.textContent = "Rate limit hit. Waiting 35s to auto-retry...";
                             await sleep(35000); 
                             process(); 
                         } 
                         else {
                             statusDiv.style.borderColor = '#ff3b30';
-                            statusDiv.textContent = "Error: " + (data.error || "Server issue.");
+                            statusDiv.textContent = "Server Error (" + response.status + "): Please try again in a moment.";
                         }
                     } catch (error) {
                         clearInterval(statusInterval);
+                        statusDiv.classList.remove('pulsing');
                         statusDiv.style.borderColor = '#ff3b30';
-                        statusDiv.textContent = "Connection error. Check internet.";
+                        statusDiv.textContent = "Connection failed. Check your network and try again.";
                     }
                 };
             };
