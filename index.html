@@ -12,7 +12,7 @@
         .profit-card { background-color: #161616; border-radius: 16px; padding: 24px 16px; text-align: center; position: relative; margin-bottom: 16px; }
         .card-title { color: #8a8a8f; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
         .profit-amount { color: #2ecc71; font-size: 2.5rem; font-weight: bold; margin: 0; }
-        .info-trigger { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #007aff; font-size: 1.2rem; cursor: pointer; padding: 4px; }
+        .info-trigger { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #007aff; font-size: 1.2rem; cursor: pointer; padding: 8px; }
         .input-group { position: relative; margin-bottom: 16px; }
         .app-input { width: 100%; background-color: #161616; border: 1px solid #222222; border-radius: 12px; padding: 16px; font-size: 1rem; color: #ffffff; box-sizing: border-box; }
         .btn { width: 100%; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 600; border: none; cursor: pointer; margin-bottom: 12px; color: #ffffff; }
@@ -22,10 +22,13 @@
         .hidden-uploader { position: absolute !important; opacity: 0 !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
         .section-label { text-align: center; font-size: 1.1rem; font-weight: 600; margin: 24px 0 16px 0; }
         
-        /* New Status Display Area */
         #status-display { background-color: #1c1c1e; border-radius: 12px; padding: 16px; margin: 16px 0; font-size: 0.9rem; color: #ffffff; border-left: 4px solid #007aff; display: none; white-space: pre-wrap; }
         
-        .app-footer { background-color: #0a0a0a; padding: 20px; text-align: center; font-size: 0.8rem; color: #666666; margin-top: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-box { background-color: #1c1c1e; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; }
+        .modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 16px; color: #007aff; }
+        .modal-body { font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px; color: #e0e0e0; }
+        .modal-close { background-color: #333; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -36,12 +39,12 @@
         <div class="profit-card">
             <div class="card-title">Net Profit</div>
             <p class="profit-amount">$0.00</p>
-            <button class="info-trigger" onclick="alert('Net Profit = Sales - Costs')">ⓘ</button>
+            <button class="info-trigger" onclick="showHelp('profit')">ⓘ</button>
         </div>
 
         <div class="input-group">
             <input type="number" class="app-input" placeholder="Sourcing Cost ($)">
-            <button class="info-trigger" onclick="alert('Enter purchase price')">ⓘ</button>
+            <button class="info-trigger" onclick="showHelp('cost')">ⓘ</button>
         </div>
 
         <input type="file" id="file-gallery-input" class="hidden-uploader" accept="image/*" onchange="handleImageUpload(this)">
@@ -60,52 +63,82 @@
         <div class="section-label">Inventory Log</div>
     </div>
 
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-box">
+            <div class="modal-title" id="help-title">Help</div>
+            <div class="modal-body" id="help-body"></div>
+            <button class="modal-close" onclick="closeHelp()">Close</button>
+        </div>
+    </div>
+
     <footer class="app-footer">&copy; 2026 ResaleIQ. All Rights Reserved.</footer>
 
     <script>
         document.getElementById('gallery-trigger-btn').addEventListener('click', () => document.getElementById('file-gallery-input').click());
         document.getElementById('camera-capture-input').addEventListener('click', () => document.getElementById('camera-capture-input').click());
 
+        function showHelp(topic) {
+            const modal = document.getElementById('help-modal');
+            const title = document.getElementById('help-title');
+            const body = document.getElementById('help-body');
+            if (topic === 'profit') {
+                title.textContent = "About Net Profit";
+                body.textContent = "Net Profit is your total take-home earnings. It is calculated by taking your final sale price and subtracting your sourcing costs, mileage, platform fees, and packaging supplies.";
+            } else if (topic === 'cost') {
+                title.textContent = "Sourcing Cost";
+                body.textContent = "Enter the exact amount you paid for the item. If you bought an item as part of a bundle, divide the total cost by the number of items to get your per-unit cost.";
+            }
+            modal.style.display = 'flex';
+        }
+        function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
+
         async function handleImageUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
             const statusDiv = document.getElementById('status-display');
             
-            // Show status area and set text
-            statusDiv.style.display = 'block';
-            statusDiv.style.borderColor = '#007aff';
-            statusDiv.textContent = "Analyzing " + file.name + "... Please wait.";
+            const process = async () => {
+                statusDiv.style.display = 'block';
+                statusDiv.style.borderColor = '#007aff';
+                statusDiv.textContent = "Analyzing " + file.name + "...";
 
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64String = reader.result.split(',')[1];
-                
-                try {
-                    const response = await fetch('/api/analyze', { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ imagesBase64: [base64String] }) 
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok) {
-                        statusDiv.style.borderColor = '#34c759';
-                        statusDiv.textContent = data.candidates[0].content.parts[0].text;
-                    } else {
-                        statusDiv.style.borderColor = '#ff3b30';
-                        let errorMessage = data.error || "Server error occurred.";
-                        if (errorMessage.includes("quota")) {
-                            errorMessage = "Rate limit reached. Please wait a moment and try again.";
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const base64String = reader.result.split(',')[1];
+                    try {
+                        const response = await fetch('/api/analyze', { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ imagesBase64: [base64String] }) 
+                        });
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            statusDiv.style.borderColor = '#34c759';
+                            statusDiv.textContent = data.candidates[0].content.parts[0].text;
+                        } else if (response.status === 429) {
+                            let waitTime = 30; // Default
+                            statusDiv.style.borderColor = '#ff9f0a';
+                            const countdown = setInterval(() => {
+                                statusDiv.textContent = "Rate limit reached. Retrying in " + waitTime + "s...";
+                                if (waitTime <= 0) {
+                                    clearInterval(countdown);
+                                    process(); // Auto-retry
+                                }
+                                waitTime--;
+                            }, 1000);
+                        } else {
+                            statusDiv.style.borderColor = '#ff3b30';
+                            statusDiv.textContent = "Error: " + (data.error || "Server issue.");
                         }
-                        statusDiv.textContent = "Error: " + errorMessage;
+                    } catch (error) {
+                        statusDiv.style.borderColor = '#ff3b30';
+                        statusDiv.textContent = "Connection error. Please check your internet.";
                     }
-                } catch (error) {
-                    statusDiv.style.borderColor = '#ff3b30';
-                    statusDiv.textContent = "Connection error. Please check your internet.";
-                }
+                };
             };
+            process();
         }
     </script>
 </body>
