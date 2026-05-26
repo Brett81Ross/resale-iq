@@ -32,7 +32,7 @@
         
         .section-title { font-size: 1.2rem; margin: 20px 0 10px 0; font-weight: bold; }
         .hidden-uploader { display: none; }
-        #status-display { margin-top: 15px; background: #1c1c1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; font-size: 0.9rem; border-left: 4px solid #007aff; }
+        #status-display { margin-top: 15px; background: #1c1c1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; font-size: 0.95rem; border-left: 4px solid #007aff; line-height: 1.6; color: #eee; }
     </style>
 </head>
 <body>
@@ -76,20 +76,10 @@
             box.style.display = 'block';
             if (type === 'profit') {
                 box.innerHTML = `<div class="info-header">What is Net Profit?</div>
-                    <ul>
-                        <li>Total Revenue: Your final sale price.</li>
-                        <li>Sourcing Cost: What you paid to acquire the item.</li>
-                        <li>Expenses: Fees, shipping, or travel costs.</li>
-                        <li>Formula: Sale Price - (Cost + Expenses) = Profit.</li>
-                    </ul>`;
+                    <ul><li>Formula: Sale Price - (Cost + Expenses) = Profit.</li></ul>`;
             } else if (type === 'cost') {
                 box.innerHTML = `<div class="info-header">Sourcing Cost Guide</div>
-                    <ul>
-                        <li>Enter the exact amount paid for the item.</li>
-                        <li>Include tax paid at the time of purchase.</li>
-                        <li>Do not include potential resale fees here.</li>
-                        <li>Keep receipts organized for tax purposes.</li>
-                    </ul>`;
+                    <ul><li>Include tax paid. Keep receipts for tax purposes.</li></ul>`;
             }
         }
 
@@ -105,7 +95,7 @@
 
         function handleFile(file) {
             if (!file) return;
-            status.textContent = "Compressing and analyzing...";
+            status.textContent = "Analyzing item...";
             
             const reader = new FileReader();
             reader.onload = (event) => {
