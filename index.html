@@ -95,6 +95,13 @@
 
         // Function to Calculate and Update the UI
         function calculateProfit() {
+            // If the sourcing cost is completely empty, keep profit at $0.00
+            if (sourcingCostInput.value === '') {
+                netProfitDisplay.textContent = '$0.00';
+                netProfitDisplay.style.color = '#34c759';
+                return;
+            }
+
             const sourcingCost = parseFloat(sourcingCostInput.value) || 0;
             const netProfit = aiEstimatedValue - sourcingCost - totalExpenses;
             
