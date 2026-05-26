@@ -130,30 +130,20 @@
             gap: 8px;
             color: #ffffff;
             font-family: inherit;
-            text-decoration: none;
-            box-sizing: border-box;
         }
 
         .btn-blue { background-color: #007aff; }
         .btn-green { background-color: #34c759; }
         .btn-orange { background-color: #ff9f0a; margin-top: 8px; }
 
-        /* Fallback visible uploader element styling */
-        .fallback-input-container {
-            background-color: #161616;
-            border: 1px dashed #333333;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .visible-file-input {
-            width: 100%;
-            color: #8a8a8f;
-            font-size: 0.9rem;
-            background: transparent;
-            border: none;
+        /* Absolute hiding rule so native buttons never ruin your UI layout */
+        .hidden-uploader {
+            position: absolute !important;
+            opacity: 0 !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+            clip: rect(1px, 1px, 1px, 1px) !important;
         }
 
         /* Section Headings */
@@ -261,17 +251,16 @@
             <button class="info-trigger" onclick="openModal('sourcing-cost')">ⓘ</button>
         </div>
 
-        <button class="btn btn-blue" onclick="forceGalleryPicker()">
+        <input type="file" id="file-gallery-input" class="hidden-uploader" accept="image/*" onchange="processSelectedImage(this)">
+        <input type="file" id="camera-capture-input" class="hidden-uploader" accept="image/*" capture="environment" onchange="processSelectedImage(this)">
+
+        <button class="btn btn-blue" id="gallery-trigger-btn">
             <span>📁</span> Select Photos
         </button>
         
-        <button class="btn btn-green" onclick="forceCameraPicker()">
+        <button class="btn btn-green" id="camera-trigger-btn">
             <span>📷</span> Take Photo
         </button>
-
-        <div class="fallback-input-container" id="safe-input-block">
-            <input type="file" id="universal-file-node" class="visible-file-input" accept="image/*" onchange="processSelectedImage(this)">
-        </div>
 
         <div class="section-label">Add Expense</div>
 
@@ -329,29 +318,22 @@
             if (e.target === this) closeModal();
         });
 
-        // Direct hardware invocations bypassing standard browser abstraction barriers
-        function forceGalleryPicker() {
-            const fileNode = document.getElementById('universal-file-node');
-            fileNode.removeAttribute('capture');
-            fileNode.click();
-        }
+        // Bulletproof Event Listeners replacing inline click handlers to prevent mobile action blocking
+        document.getElementById('gallery-trigger-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('file-gallery-input').click();
+        });
 
-        function forceCameraPicker() {
-            const fileNode = document.getElementById('universal-file-node');
-            fileNode.setAttribute('capture', 'environment');
-            fileNode.click();
-        }
+        document.getElementById('camera-trigger-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('camera-capture-input').click();
+        });
 
-        // Processing hook using standard FileReader loop
+        // Background handler for processing image file objects once selected or captured
         function processSelectedImage(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
                 const targetFile = inputElement.files[0];
-                
-                const imageReader = new FileReader();
-                imageReader.onload = function(e) {
-                    console.log("File loaded successfully into app buffer: ", targetFile.name);
-                };
-                imageReader.readAsDataURL(targetFile);
+                console.log("Image received successfully for processing: ", targetFile.name);
             }
         }
     </script>
