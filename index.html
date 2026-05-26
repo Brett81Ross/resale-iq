@@ -3,404 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resale IQ</title>
+    <title>ResaleIQ</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; }
-        .container { width: 100%; max-width: 400px; text-align: center; }
-        
-        /* Top Navigation Header Block */
-        .app-header { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            width: 100%; 
+        /* Base Application Layout */
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* App Wrapper */
+        .app-wrapper {
+            flex: 1;
+            padding: 16px;
+            max-width: 480px;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* Header Image Positioning */
+        .brand-header {
+            text-align: left;
             margin-bottom: 20px;
-            padding: 5px 0;
         }
-        .header-title { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
 
-        /* Logo Alignment */
-        .logo-container { width: 100%; overflow: hidden; margin-bottom: 20px; display: flex; justify-content: center; }
-        .logo { width: 100%; max-width: 320px; height: auto; object-fit: contain; }
-        
-        /* Dashboard Card Layout */
-        .dashboard { 
-            background: linear-gradient(145deg, #1e1e1e, #121212); 
-            padding: 22px 16px; 
-            border-radius: 16px; 
-            margin-bottom: 15px; 
-            width: 100%; 
-            box-sizing: border-box; 
-            border: 1px solid #2a2a2a;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        .main-logo {
+            max-width: 260px;
+            height: auto;
+            display: block;
+        }
+
+        /* Cards & Panels */
+        .profit-card {
+            background-color: #161616;
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
             position: relative;
+            margin-bottom: 16px;
         }
-        .dashboard-label {
-            font-size: 13px;
+
+        .card-title {
+            color: #8a8a8f;
+            font-size: 0.85rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #888;
+            letter-spacing: 1px;
             margin-bottom: 8px;
-            font-weight: 700;
         }
-        .dashboard-value { 
-            margin: 0; 
-            font-size: 32px; 
-            font-weight: 700; 
-            letter-spacing: -0.5px;
-            color: #28a745; 
-            text-shadow: 0 0 10px rgba(40, 167, 69, 0.2);
+
+        .profit-amount {
+            color: #2ecc71;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
         }
-        
-        .section-title { font-size: 18px; font-weight: 600; margin: 30px 0 15px 0; text-align: center; color: #fff; }
-        
-        /* Input Field Design with Inline Help Accessors */
-        .input-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
-        input { width: 100%; padding: 16px 50px 16px 16px; border-radius: 10px; border: 1px solid #2a2a2a; font-size: 16px; background: #111; color: #fff; box-sizing: border-box; outline: none; }
-        input::placeholder { color: #555; }
-        input:focus { border-color: #0070f3; }
-        
-        .info-toggle-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: transparent; color: #0070f3; border: none; font-size: 20px; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 5; }
-        .dashboard .info-toggle-btn { top: 20px; transform: none; }
-        
-        /* Embedded Local Context Help Trays */
-        .help-tray { display: none; background: #161616; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; text-align: left; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
-        .help-tray h4 { margin: 0 0 10px 0; color: #0070f3; font-size: 15px; }
-        .help-tray ul { padding-left: 18px; margin: 0; }
-        .help-tray li { margin-bottom: 8px; color: #ccc; font-size: 13px; line-height: 1.4; }
-        .help-tray li:last-child { margin-bottom: 0; }
 
-        /* Standard Action Buttons */
-        .btn { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 10px; border: none; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; }
-        .select-btn { background: #0070f3; }
-        .camera-btn { background: #28a745; }
-        .expense-btn { background: #f39c12; margin-top: 5px; }
-        
-        /* Interactive History Log Panels */
-        .history-list { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 15px; text-align: left; }
-        .history-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 14px; position: relative; }
-        .history-meta { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 6px; }
-        .history-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%; }
-        .history-metrics { display: flex; gap: 15px; font-size: 13px; }
-        .metric-cogs { color: #ff808b; }
-        .metric-rev { color: #28a745; }
-        .delete-log-btn { position: absolute; right: 14px; top: 14px; background: transparent; border: none; color: #444; font-size: 16px; cursor: pointer; padding: 0; }
-        .delete-log-btn:hover { color: #dc3545; }
-        .empty-history-text { color: #444; font-size: 14px; font-style: italic; margin-top: 10px; }
+        /* Interactive Info Icons */
+        .info-trigger {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #007aff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        #gallery { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; width: 100%; justify-content: center; }
-        #gallery img { width: 75px; height: 75px; object-fit: cover; border-radius: 8px; border: 1px solid #222; }
-        
-        #result { display: none; background: #111; padding: 16px; border-radius: 10px; margin-top: 20px; text-align: left; font-size: 14px; border: 1px solid #222; line-height: 1.6; width: 100%; box-sizing: border-box; white-space: pre-wrap; }
-        #result.error-state { border-color: #dc3545; background: rgba(220, 53, 69, 0.05); color: #ff808b; }
-        .retry-action-link { color: #0070f3; font-weight: bold; text-decoration: underline; cursor: pointer; display: block; margin-top: 8px; }
+        /* Form Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .app-input {
+            width: 100%;
+            background-color: #161616;
+            border: 1px solid #222222;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 1rem;
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+
+        .app-input::placeholder {
+            color: #555555;
+        }
+
+        .input-group .info-trigger {
+            top: 50%;
+            transform: translateY(-50%);
+            right: 16px;
+        }
+
+        /* UI Action Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #ffffff;
+        }
+
+        .btn-blue { background-color: #007aff; }
+        .btn-green { background-color: #34c759; }
+        .btn-orange { background-color: #ff9f0a; margin-top: 8px; }
+
+        /* Section Headings */
+        .section-label {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 24px 0 16px 0;
+            color: #ffffff;
+        }
+
+        /* Information Modals/Popups */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background-color: #1c1c1e;
+            border: 1px solid #2c2c2e;
+            border-radius: 14px;
+            padding: 20px;
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .modal-text {
+            color: #ffffff;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .modal-close-btn {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* App Legal Footer */
+        .app-footer {
+            background-color: #0a0a0a;
+            border-top: 1px solid #161616;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666666;
+            margin-top: auto;
+        }
+
+        .footer-logo {
+            height: 18px;
+            vertical-align: middle;
+            margin-right: 6px;
+            opacity: 0.5;
+        }
+
+        .copyright-text {
+            display: inline-block;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="app-header">
-            <span class="header-title">Resale IQ</span>
-        </div>
 
-        <div class="logo-container">
-            <img src="logo1.png" class="logo" alt="Resale IQ">
-        </div>
+    <div class="app-wrapper">
         
-        <div class="dashboard">
-            <div class="dashboard-label">Net Profit</div>
-            <div class="dashboard-value">$<span id="netProfit">0.00</span></div>
-            <button class="info-toggle-btn" onclick="toggleHelpTray('profitTray')">ⓘ</button>
+        <div class="brand-header">
+            <img src="logo1.png" alt="ResaleIQ" class="main-logo">
         </div>
 
-        <div id="profitTray" class="help-tray">
-            <h4>📊 Net Profit Calculation</h4>
-            <ul>
-                <li><b>Formula:</b> Projected Sales Revenue minus Sourcing Costs (COGS) minus your Operational Expenses.</li>
-                <li><b>Scan Revenue:</b> Generated instantly from historical marketplace data parsed through the Gemini 3.5 vision engine.</li>
-                <li><b>Overhead Liability:</b> Items logged via the 'Add Expense' workflow subtract directly from this dashboard card value.</li>
-            </ul>
+        <div class="profit-card">
+            <div class="card-title">Net Profit</div>
+            <p class="profit-amount">$0.00</p>
+            <button class="info-trigger" onclick="openModal('net-profit')">ⓘ</button>
         </div>
 
-        <div class="input-wrapper">
-            <input type="number" id="costInput" placeholder="Sourcing Cost ($)" inputmode="decimal">
-            <button class="info-toggle-btn" onclick="toggleHelpTray('sourcingTray')">ⓘ</button>
+        <div class="input-group">
+            <input type="number" class="app-input" placeholder="Sourcing Cost ($)" inputmode="decimal">
+            <button class="info-trigger" onclick="openModal('sourcing-cost')">ⓘ</button>
         </div>
 
-        <div id="sourcingTray" class="help-tray">
-            <h4>💡 Sourcing Cost Breakdown</h4>
-            <ul>
-                <li><b>Thrift/Bundles:</b> Take the total checkout receipt cost divided evenly by the number of usable items purchased.</li>
-                <li><b>Unearned/Found Items:</b> Enter <b>$0</b>. If gas or travel overhead was required for pickup, log it down under general operational expenses.</li>
-                <li><b>Repairs & Cleaning:</b> If dedicated parts or restoration chemicals were bought for this specific unit, add that to the initial value here.</li>
-            </ul>
-        </div>
-
-        <button class="btn select-btn" onclick="document.getElementById('fileInput').click()">📁 Select Photos</button>
-        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-
-        <button class="btn camera-btn" onclick="document.getElementById('cameraInput').click()">📷 Take Photo</button>
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-
-        <div class="section-title">Add Expense</div>
+        <button class="btn btn-blue">
+            <span>📁</span> Select Photos
+        </button>
         
-        <div class="input-wrapper">
-            <input type="text" id="expDesc" placeholder="Description (e.g., Mileage)">
-        </div>
-        <div class="input-wrapper">
-            <input type="number" id="expAmt" placeholder="Amount ($)" inputmode="decimal">
-        </div>
-        <button class="btn expense-btn" onclick="addExpense()">Add Expense</button>
-        
-        <div id="gallery"></div>
-        <div id="result"></div>
+        <button class="btn btn-green">
+            <span>📷</span> Take Photo
+        </button>
 
-        <div class="section-title">Inventory Log</div>
-        <div class="history-list" id="historyContainer"></div>
+        <div class="section-label">Add Expense</div>
+
+        <div class="input-group">
+            <input type="text" class="app-input" placeholder="Description (e.g., Mileage)">
+        </div>
+
+        <div class="input-group">
+            <input type="number" class="app-input" placeholder="Amount ($)" inputmode="decimal">
+        </div>
+
+        <button class="btn btn-orange">Add Expense</button>
+
+        <div class="section-label">Inventory Log</div>
+
     </div>
 
-    <script>
-        let allImages = [];
-        let currentSourcingCostCache = 0;
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-box">
+            <div class="modal-text" id="modal-content-field">Context text drops here.</div>
+            <button class="modal-close-btn" onclick="closeModal()">Dismiss</button>
+        </div>
+    </div>
 
-        // Clean Localized Element Toggler
-        function toggleHelpTray(trayId) {
-            const tray = document.getElementById(trayId);
-            if (tray.style.display === 'block') {
-                tray.style.display = 'none';
-            } else {
-                tray.style.display = 'block';
-            }
-        }
-
-        async function handleFiles(files) {
-            currentSourcingCostCache = document.getElementById('costInput').value || 0;
-            allImages = []; 
-            
-            const gallery = document.getElementById('gallery');
-            const resultBox = document.getElementById('result');
-            
-            gallery.innerHTML = "";
-            resultBox.className = ""; 
-            resultBox.style.display = "none";
-            
-            const fileArray = Array.from(files);
-            if (fileArray.length === 0) return;
-
-            for (const file of fileArray) {
-                if (!file.type.startsWith('image/')) {
-                    displayErrorUI("Invalid format detected. Please select standard images.");
-                    return;
-                }
-
-                try {
-                    const b64 = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onerror = () => reject(new Error("File conversion aborted."));
-                        reader.onload = (e) => {
-                            const img = new Image();
-                            img.onerror = () => reject(new Error("Corrupted media architecture."));
-                            img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 1024; 
-                                let width = img.width;
-                                let height = img.height;
-
-                                if (width > MAX_WIDTH) {
-                                    height *= MAX_WIDTH / width;
-                                    width = MAX_WIDTH;
-                                }
-
-                                canvas.width = width; 
-                                canvas.height = height;
-                                
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, width, height);
-                                
-                                const base64Result = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
-                                resolve(base64Result);
-                            };
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                    
-                    allImages.push(b64);
-                    
-                    const thumb = document.createElement('img');
-                    thumb.src = `data:image/jpeg;base64,${b64}`;
-                    gallery.appendChild(thumb);
-                    
-                } catch (processingErr) {
-                    displayErrorUI(`Pre-processing Failure: ${processingErr.message}`);
-                    return;
-                }
-            }
-            runAnalysis(currentSourcingCostCache);
-        }
-
-        async function runAnalysis(cost) {
-            const resultBox = document.getElementById('result');
-            resultBox.className = ""; 
-            resultBox.style.display = 'block';
-            resultBox.innerText = "Analyzing item properties with Gemini 3.5...";
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000); 
-            
-            try {
-                const res = await fetch('/api/analyze', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ imagesBase64: allImages }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "Server processing iteration fault.");
-                
-                const text = data.candidates[0].content.parts[0].text;
-                resultBox.innerText = text;
-                
-                const priceMatch = text.match(/\$?(\d+)/);
-                const estimatedSalePrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
-                
-                const lines = text.split('\n');
-                const titleFallback = lines[0].replace(/[#*`]/g, '').trim() || "Analyzed Inventory Item";
-
-                let h = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
-                h.unshift({ 
-                    id: Date.now().toString(),
-                    title: titleFallback,
-                    text, 
-                    cost: parseFloat(cost), 
-                    price: estimatedSalePrice, 
-                    timestamp: Date.now() 
-                });
-                localStorage.setItem('resaleHistory', JSON.stringify(h));
-                
-                calculateFinances();
-            } catch (err) {
-                clearTimeout(timeoutId);
-                if (err.name === 'AbortError') {
-                    displayErrorUI("Network timeout: The connection took too long to respond. Please check your signal strength and retry.");
-                } else {
-                    displayErrorUI(`Execution Error: ${err.message || "Failed to contact analysis server."}`);
-                }
-            }
-        }
-
-        function displayErrorUI(message) {
-            const resultBox = document.getElementById('result');
-            resultBox.style.display = 'block';
-            resultBox.className = "error-state";
-            resultBox.innerHTML = `⚠️ <b>Resale IQ Error Encountered</b><br>${message}<span class="retry-action-link" onclick="runAnalysis(currentSourcingCostCache)">🔄 Tap here to retry analysis</span>`;
-        }
-
-        function addExpense() {
-            const desc = document.getElementById('expDesc').value.trim();
-            const amt = parseFloat(document.getElementById('expAmt').value) || 0;
-            if (!desc || amt <= 0) return;
-
-            let exps = JSON.parse(localStorage.getItem('expenses') || '[]');
-            exps.push({ id: Date.now().toString(), desc, amt, timestamp: Date.now() });
-            localStorage.setItem('expenses', JSON.stringify(exps));
-            
-            document.getElementById('expDesc').value = "";
-            document.getElementById('expAmt').value = "";
-            
-            calculateFinances();
-        }
-
-        function deleteHistoryItem(id, type) {
-            if (!confirm("Are you sure you want to remove this log entry?")) return;
-            
-            const storageKey = type === 'item' ? 'resaleHistory' : 'expenses';
-            let dataset = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            dataset = dataset.filter(entry => entry.id !== id);
-            localStorage.setItem(storageKey, JSON.stringify(dataset));
-            
-            calculateFinances();
-        }
-
-        function calculateFinances() {
-            const items = JSON.parse(localStorage.getItem('resaleHistory') || '[]');
-            const exps = JSON.parse(localStorage.getItem('expenses') || '[]');
-            
-            let accumulatedRevenue = 0;
-            let totalCogs = 0;
-            let operationalExpenses = 0;
-
-            const container = document.getElementById('historyContainer');
-            container.innerHTML = "";
-
-            items.forEach(item => {
-                accumulatedRevenue += item.price;
-                totalCogs += item.cost;
-
-                const card = document.createElement('div');
-                card.className = 'history-card';
-                card.innerHTML = `
-                    <div class="history-meta">
-                        <span>📦 ITEM SCAN</span>
-                        <span>${new Date(item.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <div class="history-title">${item.title}</div>
-                    <div class="history-metrics">
-                        <span class="metric-cogs">Sourced: $${item.cost.toFixed(2)}</span>
-                        <span class="metric-rev">Est Value: $${item.price.toFixed(2)}</span>
-                    </div>
-                    <button class="delete-log-btn" onclick="deleteHistoryItem('${item.id}', 'item')">✕</button>
-                `;
-                container.appendChild(card);
-            });
-
-            exps.forEach(e => {
-                operationalExpenses += e.amt;
-
-                const card = document.createElement('div');
-                card.className = 'history-card';
-                card.style.borderColor = '#3a2307';
-                card.innerHTML = `
-                    <div class="history-meta">
-                        <span style="color: #f39c12;">💸 EXPENSE LOG</span>
-                        <span>${new Date(e.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <div class="history-title">${e.desc}</div>
-                    <div class="history-metrics">
-                        <span class="metric-cogs" style="color: #f39c12;">Cost: $${e.amt.toFixed(2)}</span>
-                    </div>
-                    <button class="delete-log-btn" onclick="deleteHistoryItem('${e.id}', 'expense')">✕</button>
-                `;
-                container.appendChild(card);
-            });
-
-            if (items.length === 0 && exps.length === 0) {
-                container.innerHTML = '<div class="empty-history-text">No logged items or expenses found.</div>';
-            }
-
-            const trueNetProfit = accumulatedRevenue - totalCogs - operationalExpenses;
-            document.getElementById('netProfit').innerText = trueNetProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-
-        document.getElementById('fileInput').onchange = (e) => handleFiles(e.target.files);
-        document.getElementById('cameraInput').onchange = (e) => handleFiles(e.target.files);
-       
-        window.onload = calculateFinances;
-        <footer style="background-color: #1a1a1a; border-top: 1px solid #2d2d2d; padding: 15px 20px; text-align: center; font-size: 0.85rem; color: #888888; font-family: sans-serif;">
-        <img src="logo1.png" alt="ResaleIQ Logo" style="height: 20px; vertical-align: middle; margin-right: 8px; opacity: 0.7;">
-        <div style="display: inline-block; vertical-align: middle; letter-spacing: 0.5px;">
+    <footer class="app-footer">
+        <img src="logo1.png" alt="ResaleIQ Logo" class="footer-logo">
+        <div class="copyright-text">
             &copy; <span id="copyright-year"></span> ResaleIQ. All Rights Reserved.
         </div>
     </footer>
 
     <script>
-        // Automatically updates the footer to the current year
+        // Synchronize copyright timestamp data automatically 
         document.getElementById('copyright-year').textContent = new Date().getFullYear();
-    </script>
-</body>
-</html>
 
+        // Object containing text payloads for descriptive popups
+        const infoExplainerData = {
+            'net-profit': 'Your Net Profit calculates your total sales values minus item sourcing fees, marketplace shipping rates, and calculated mileage/operating expenses.',
+            'sourcing-cost': 'Enter the precise amount paid out-of-pocket to purchase this item before restoration, listing fees, or secondary shipping costs.'
+        };
+
+        // UI Modal Visibility Management Logic
+        function openModal(contextKey) {
+            const descriptionString = infoExplainerData[contextKey] || 'Information parameters unavailable.';
+            document.getElementById('modal-content-field').textContent = descriptionString;
+            document.getElementById('info-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('info-modal').classList.remove('active');
+        }
+
+        // Tap background shield container to close modal cleanly
+        document.getElementById('info-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
     </script>
 </body>
 </html>
