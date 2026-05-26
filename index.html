@@ -110,16 +110,18 @@
             reader.onloadend = async () => {
                 const base64Data = reader.result.split(',')[1];
                 try {
-                    // We send the data as an array called 'imagesBase64' to match your backend
                     const response = await fetch('/api/analyze', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ imagesBase64: [base64Data] })
                     });
-                    const data = await response.json();
-                    if (data.error) throw new Error(data.error);
                     
-                    // Access the text from the response structure your API returns
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Server error occurred');
+                    }
+                    
                     status.textContent = data.candidates[0].content.parts[0].text;
                 } catch (err) {
                     status.textContent = "Error: " + err.message;
