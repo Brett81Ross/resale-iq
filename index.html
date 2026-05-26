@@ -23,8 +23,11 @@
         
         .embedded-info { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #333; border: none; color: #fff; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
         
-        #info-box { background: #1c1c1e; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #444; display: none; font-size: 0.9rem; line-height: 1.5; color: #ccc; }
-        .info-header { color: #007aff; font-weight: bold; margin-bottom: 5px; }
+        #info-box { background: #1c1c1e; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #444; display: none; font-size: 1.1rem; line-height: 1.6; color: #eee; }
+        .info-header { color: #007aff; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; }
+        #info-box p { margin-top: 0; margin-bottom: 10px; }
+        #info-box ul { margin-top: 0; padding-left: 20px; margin-bottom: 10px; }
+        #info-box li { margin-bottom: 8px; }
         
         .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 1rem; transition: background-color 0.2s; }
         .btn-blue { background-color: #007aff; color: white; }
@@ -134,13 +137,38 @@
         // Info Box Toggle Logic
         function showInfo(type) {
             const box = document.getElementById('info-box');
+            
+            // Toggle logic so you can click the button again to hide the box
+            if (box.dataset.currentType === type && box.style.display === 'block') {
+                box.style.display = 'none';
+                box.dataset.currentType = '';
+                return;
+            }
+            
             box.style.display = 'block';
+            box.dataset.currentType = type;
+            
             if (type === 'profit') {
-                box.innerHTML = `<div class="info-header">What is Net Profit?</div>
-                    <ul><li>Formula: AI Estimated Value - (Sourcing Cost + Expenses) = Profit.</li></ul>`;
+                box.innerHTML = `
+                    <div class="info-header">Understanding Net Profit</div>
+                    <p>Your Net Profit is the actual money you take home after all costs are deducted. It gives you a realistic view of your true margins.</p>
+                    <ul>
+                        <li><strong>AI Estimated Value:</strong> The expected selling price based on current market data and analysis.</li>
+                        <li><strong>Sourcing Cost:</strong> What you initially paid for the item (enter this below).</li>
+                        <li><strong>Expenses:</strong> Extra costs added throughout the process like mileage, cleaning, repairs, or platform fees.</li>
+                    </ul>
+                    <p style="color: #34c759; font-weight: bold; text-align: center;">Estimated Value - (Cost + Expenses) = Net Profit</p>
+                `;
             } else if (type === 'cost') {
-                box.innerHTML = `<div class="info-header">Sourcing Cost Guide</div>
-                    <ul><li>Include tax paid. Keep receipts for tax purposes.</li></ul>`;
+                box.innerHTML = `
+                    <div class="info-header">Sourcing Cost & Expenses Guide</div>
+                    <p>Accurate cost tracking is essential for true profit calculation and keeping proper records for tax reporting.</p>
+                    <ul>
+                        <li><strong>Sourcing Cost:</strong> Enter the exact amount you paid for the item at the time of purchase, making sure to include any sales tax.</li>
+                        <li><strong>Record Keeping:</strong> Always save your physical or digital receipts for your tax records.</li>
+                        <li><strong>Additional Expenses:</strong> Use the Add Expense section below for any extra costs incurred (e.g., fuel, repairs, shipping materials).</li>
+                    </ul>
+                `;
             }
         }
 
