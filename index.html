@@ -11,7 +11,12 @@
         .logo-container { text-align: center; margin-bottom: 20px; }
         .main-logo { width: 200px; height: auto; object-fit: contain; }
         
-        .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; }
+        .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
+        
+        /* Professional Info Button Styles */
+        .info-trigger { position: absolute; top: 15px; right: 15px; background: #2c2c2e; border: 1px solid #444; color: #007aff; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .info-box { background: #0a1929; border: 1px solid #004080; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; font-size: 0.95rem; line-height: 1.5; color: #b3d7ff; }
+        .info-title { color: #fff; font-weight: bold; margin-bottom: 8px; display: block; }
         
         .result-label { color: #888; font-size: 0.9rem; text-align: center; }
         .result-amount { color: #34c759; font-size: 2.5rem; font-weight: bold; text-align: center; margin: 5px 0; }
@@ -41,14 +46,27 @@
 
         <div id="analysis-results">
             <div class="card">
-                <div class="result-label">AI ESTIMATED VALUE</div>
+                <div class="info-trigger" onclick="toggleInfo('info-profit')">i</div>
+                <div class="result-label">NET PROFIT (EST)</div>
                 <div class="result-amount" id="net-profit">$0.00</div>
-                <input type="number" id="sourcing-cost" placeholder="Enter Sourcing Cost ($)">
+                <div id="info-profit" class="info-box">
+                    <span class="info-title">Why the initial number?</span>
+                    The Net Profit starts by showing the AI-estimated market value. Once you input your Sourcing Cost and additional expenses, the app subtracts those in real-time to show your actual take-home margin.
+                </div>
             </div>
             
-            <div id="status-display">Waiting for analysis...</div>
+            <div class="card">
+                <div class="info-trigger" onclick="toggleInfo('info-cost')">i</div>
+                <input type="number" id="sourcing-cost" placeholder="Enter Sourcing Cost ($)">
+                <div id="info-cost" class="info-box">
+                    <span class="info-title">Sourcing Cost Input</span>
+                    This is your initial investment for the item. Entering this updates the Net Profit card above, providing a transparent view of your actual profit after acquisition.
+                </div>
+            </div>
+            
+            <div id="status-display">Analyzing...</div>
 
-            <div id="extra-controls">
+            <div id="extra-controls" class="card">
                 <input type="number" id="expense-amount" placeholder="Add Expense Amount ($)">
                 <button class="btn btn-secondary" style="margin-top:10px;" id="add-expense-btn">LOG EXPENSE</button>
             </div>
@@ -68,6 +86,11 @@
         const analysisResults = document.getElementById('analysis-results');
         const extraControls = document.getElementById('extra-controls');
 
+        function toggleInfo(id) {
+            const box = document.getElementById(id);
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
         function calculateProfit() {
             const sourcingCost = parseFloat(sourcingCostInput.value) || 0;
             const netProfit = aiEstimatedValue - sourcingCost - totalExpenses;
@@ -83,7 +106,7 @@
         function handleFile(file) {
             if (!file) return;
             analysisResults.style.display = 'block';
-            status.textContent = "Analyzing with MachZero...";
+            status.textContent = "MachZero is scanning...";
             
             const reader = new FileReader();
             reader.onload = (event) => {
