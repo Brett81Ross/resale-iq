@@ -5,44 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MachZero</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; }
-        .app-container { max-width: 500px; margin: 0 auto; }
+        body { background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .app-container { max-width: 400px; width: 100%; }
         
-        /* Android UI Cards */
-        .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .main-logo { width: 200px; height: auto; object-fit: contain; }
         
-        .main-logo { width: 150px; display: block; margin: 0 auto 20px; }
+        .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; }
         
-        .btn-main { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
-        .bg-blue { background: #007aff; color: white; }
+        .result-label { color: #888; font-size: 0.9rem; text-align: center; }
+        .result-amount { color: #34c759; font-size: 2.5rem; font-weight: bold; text-align: center; margin: 5px 0; }
         
-        /* Hide sections until needed */
-        #results-area { display: none; }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #444; background: #2c2c2e; color: #fff; box-sizing: border-box; font-size: 1rem; margin-top: 10px; }
         
-        .result-val { font-size: 2rem; color: #34c759; font-weight: bold; text-align: center; margin: 10px 0; }
+        .btn { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 10px; transition: opacity 0.2s; }
+        .btn-primary { background-color: #007aff; color: white; }
+        .btn-secondary { background-color: #333; color: white; }
+        
+        #analysis-results, #extra-controls { display: none; }
+        
+        #status-display { margin-top: 15px; padding: 15px; background: #1c1c1e; border-radius: 12px; border-left: 4px solid #007aff; font-size: 1rem; line-height: 1.5; color: #eee; white-space: pre-wrap; }
+        .hidden-uploader { display: none; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <img src="logo1.jpg" alt="MachZero" class="main-logo">
-
-        <div class="card" id="input-area">
-            <button class="btn-main bg-blue" onclick="document.getElementById('camera-input').click()">START ANALYSIS</button>
-            <input type="file" id="camera-input" class="hidden-uploader" accept="image/*" capture="environment" style="display:none">
+        <div class="logo-container">
+            <img src="logo1.jpg" alt="MachZero" class="main-logo">
         </div>
 
-        <div class="card" id="results-area">
-            <div style="color: #888; text-align: center;">AI MARKET VALUE</div>
-            <div class="result-val" id="net-profit">$0.00</div>
-            <input type="number" id="sourcing-cost" placeholder="Enter Sourcing Cost ($)" style="width:100%; padding:15px; border-radius:10px; border:1px solid #333; background:#2c2c2e; color:#fff; box-sizing:border-box;">
+        <div class="card">
+            <button class="btn btn-primary" id="gallery-btn">SELECT PHOTOS</button>
+            <button class="btn btn-primary" id="camera-btn">TAKE PHOTO</button>
+        </div>
+
+        <div id="analysis-results">
+            <div class="card">
+                <div class="result-label">AI ESTIMATED VALUE</div>
+                <div class="result-amount" id="net-profit">$0.00</div>
+                <input type="number" id="sourcing-cost" placeholder="Enter Sourcing Cost ($)">
+            </div>
+            
+            <div id="status-display">Waiting for analysis...</div>
+
+            <div id="extra-controls">
+                <input type="number" id="expense-amount" placeholder="Add Expense Amount ($)">
+                <button class="btn btn-secondary" style="margin-top:10px;" id="add-expense-btn">LOG EXPENSE</button>
+            </div>
         </div>
     </div>
 
+    <input type="file" id="gallery-input" class="hidden-uploader" accept="image/*">
+    <input type="file" id="camera-input" class="hidden-uploader" accept="image/*" capture="environment">
+
     <script>
-        // Simple logic to show results when file is picked
-        document.getElementById('camera-input').addEventListener('change', function() {
-            document.getElementById('results-area').style.display = 'block';
-            // Trigger your analysis function here
+        let aiEstimatedValue = 0;
+        let totalExpenses = 0;
+
+        const netProfitDisplay = document.getElementById('net-profit');
+        const sourcingCostInput = document.getElementById('sourcing-cost');
+        const status = document.getElementById('status-display');
+        const analysisResults = document.getElementById('analysis-results');
+        const extraControls = document.getElementById('extra-controls');
+
+        function calculateProfit() {
+            const sourcingCost = parseFloat(sourcingCostInput.value) || 0;
+            const netProfit = aiEstimatedValue - sourcingCost - totalExpenses;
+            netProfitDisplay.textContent = '$' + netProfit.toFixed(2);
+            netProfitDisplay.style.color = netProfit < 0 ? '#ff3b30' : '#34c759';
+        }
+
+        sourcingCostInput.addEventListener('input', calculateProfit);
+
+        document.getElementById('gallery-btn').addEventListener('click', () => document.getElementById('gallery-input').click());
+        document.getElementById('camera-btn').addEventListener('click', () => document.getElementById('camera-input').click());
+
+        function handleFile(file) {
+            if (!file) return;
+            analysisResults.style.display = 'block';
+            status.textContent = "Analyzing with MachZero...";
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    sendToServer(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('gallery-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
+        document.getElementById('camera-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        async function sendToServer(base64Data) {
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imagesBase64: [base64Data] })
+                });
+                const data = await response.json();
+                const rawText = data.candidates[0].content.parts[0].text;
+                
+                const match = rawText.match(/Estimated Market Value:[^\d]*(\d+(\.\d+)?)/i);
+                if (match && match[1]) {
+                    aiEstimatedValue = parseFloat(match[1]);
+                    calculateProfit();
+                }
+                
+                status.textContent = rawText;
+                extraControls.style.display = 'block';
+            } catch (err) {
+                status.textContent = "Error: " + err.message;
+            }
+        }
+
+        document.getElementById('add-expense-btn').addEventListener('click', () => {
+            const exp = parseFloat(document.getElementById('expense-amount').value) || 0;
+            totalExpenses += exp;
+            document.getElementById('expense-amount').value = '';
+            calculateProfit();
         });
     </script>
 </body>
