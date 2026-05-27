@@ -13,7 +13,6 @@
         
         .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
         
-        /* Professional Info Button Styles */
         .info-trigger { position: absolute; top: 15px; right: 15px; background: #2c2c2e; border: 1px solid #444; color: #007aff; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; }
         .info-box { background: #0a1929; border: 1px solid #004080; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; font-size: 0.95rem; line-height: 1.5; color: #b3d7ff; }
         .info-title { color: #fff; font-weight: bold; margin-bottom: 8px; display: block; }
@@ -30,7 +29,7 @@
         #analysis-results, #extra-controls { display: none; }
         
         #status-display { margin-top: 15px; padding: 15px; background: #1c1c1e; border-radius: 12px; border-left: 4px solid #007aff; font-size: 1rem; line-height: 1.5; color: #eee; white-space: pre-wrap; }
-        .hidden-uploader { display: none; }
+        .hidden-uploader { position: absolute; top: 0; left: 0; opacity: 0; width: 0.1px; height: 0.1px; }
     </style>
 </head>
 <body>
@@ -40,9 +39,12 @@
         </div>
 
         <div class="card">
-            <button class="btn btn-primary" id="gallery-btn">SELECT PHOTOS</button>
-            <button class="btn btn-primary" id="camera-btn">TAKE PHOTO</button>
+            <button class="btn btn-primary" onclick="document.getElementById('gallery-input').click()">SELECT PHOTOS</button>
+            <button class="btn btn-primary" onclick="document.getElementById('camera-input').click()">TAKE PHOTO</button>
         </div>
+
+        <input type="file" id="gallery-input" class="hidden-uploader" accept="image/*">
+        <input type="file" id="camera-input" class="hidden-uploader" accept="image/*" capture="environment">
 
         <div id="analysis-results">
             <div class="card">
@@ -51,7 +53,7 @@
                 <div class="result-amount" id="net-profit">$0.00</div>
                 <div id="info-profit" class="info-box">
                     <span class="info-title">Why the initial number?</span>
-                    The Net Profit starts by showing the AI-estimated market value. Once you input your Sourcing Cost and additional expenses, the app subtracts those in real-time to show your actual take-home margin.
+                    The Net Profit starts by showing the AI-estimated market value. Once you input your Sourcing Cost and additional expenses, the app subtracts those in real-time.
                 </div>
             </div>
             
@@ -60,26 +62,23 @@
                 <input type="number" id="sourcing-cost" placeholder="Enter Sourcing Cost ($)">
                 <div id="info-cost" class="info-box">
                     <span class="info-title">Sourcing Cost Input</span>
-                    This is your initial investment for the item. Entering this updates the Net Profit card above, providing a transparent view of your actual profit after acquisition.
+                    This is your initial investment for the item. Entering this updates the Net Profit card above, providing a transparent view of your actual profit.
                 </div>
             </div>
             
-            <div id="status-display">Analyzing...</div>
+            <div id="status-display">Waiting for input...</div>
 
             <div id="extra-controls" class="card">
                 <div class="info-trigger" onclick="toggleInfo('info-expense')">i</div>
                 <div id="info-expense" class="info-box">
                     <span class="info-title">Adding Expenses</span>
-                    Log costs incurred after the initial purchase, such as fuel, cleaning supplies, or shipping fees. These will be automatically deducted from your final Net Profit calculation.
+                    Log costs incurred after the initial purchase, such as fuel, cleaning supplies, or shipping fees. These are deducted from your final Net Profit.
                 </div>
                 <input type="number" id="expense-amount" placeholder="Add Expense Amount ($)">
                 <button class="btn btn-secondary" style="margin-top:10px;" id="add-expense-btn">LOG EXPENSE</button>
             </div>
         </div>
     </div>
-
-    <input type="file" id="gallery-input" class="hidden-uploader" accept="image/*">
-    <input type="file" id="camera-input" class="hidden-uploader" accept="image/*" capture="environment">
 
     <script>
         let aiEstimatedValue = 0;
@@ -105,9 +104,6 @@
 
         sourcingCostInput.addEventListener('input', calculateProfit);
 
-        document.getElementById('gallery-btn').addEventListener('click', () => document.getElementById('gallery-input').click());
-        document.getElementById('camera-btn').addEventListener('click', () => document.getElementById('camera-input').click());
-
         function handleFile(file) {
             if (!file) return;
             analysisResults.style.display = 'block';
@@ -118,4 +114,51 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    sendToServer(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('gallery-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
+        document.getElementById('camera-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        async function sendToServer(base64Data) {
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imagesBase64: [base64Data] })
+                });
+                const data = await response.json();
+                const rawText = data.candidates[0].content.parts[0].text;
+                
+                const match = rawText.match(/Estimated Market Value:[^\d]*(\d+(\.\d+)?)/i);
+                if (match && match[1]) {
+                    aiEstimatedValue = parseFloat(match[1]);
+                    calculateProfit();
+                }
+                
+                status.textContent = rawText;
+                extraControls.style.display = 'block';
+            } catch (err) {
+                status.textContent = "Error: " + err.message;
+            }
+        }
+
+        document.getElementById('add-expense-btn').addEventListener('click', () => {
+            const exp = parseFloat(document.getElementById('expense-amount').value) || 0;
+            totalExpenses += exp;
+            document.getElementById('expense-amount').value = '';
+            calculateProfit();
+        });
+    </script>
+</body>
+</html>
