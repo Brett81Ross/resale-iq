@@ -41,6 +41,7 @@
             font-size: 1.1rem;
             color: #bbb;
             margin: 0;
+            font-weight: bold;
         }
         button {
             background-color: #007bff;
@@ -58,6 +59,7 @@
             padding: 20px;
             margin-top: 20px;
             border-radius: 8px;
+            border: 1px solid #444;
         }
         footer {
             text-align: center;
@@ -101,7 +103,7 @@
         const file = event.target.files[0];
         if (file) {
             document.getElementById('analysis-modal').style.display = 'block';
-            document.getElementById('resultText').innerText = 'Analyzing ' + file.name + ' for market value...';
+            document.getElementById('resultText').innerText = 'Analyzing image for market valuation...';
             // Integration logic for backend analysis would go here
         }
     });
