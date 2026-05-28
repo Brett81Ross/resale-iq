@@ -36,27 +36,21 @@
             letter-spacing: 0.5px;
         }
         
-        .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
+        .card { background: #1c1c1e; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; }
         
-        .info-trigger { position: absolute; top: 15px; right: 15px; background: #2c2c2e; border: 1px solid #444; color: #007aff; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        .info-box { background: #0a1929; border: 1px solid #004080; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; font-size: 0.95rem; line-height: 1.5; color: #b3d7ff; }
-        .info-title { color: #fff; font-weight: bold; margin-bottom: 8px; display: block; }
+        /* Modal Overlay */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .close-btn { color: #007aff; font-size: 1rem; cursor: pointer; margin-bottom: 20px; display: block; font-weight: bold; }
         
-        .result-label { color: #888; font-size: 0.9rem; text-align: center; }
-        .result-amount { color: #34c759; font-size: 2.5rem; font-weight: bold; text-align: center; margin: 5px 0; }
-        
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #444; background: #2c2c2e; color: #fff; box-sizing: border-box; font-size: 1rem; margin-top: 10px; }
+        /* History Styling */
+        .history-item { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; }
         
         .btn { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 10px; transition: opacity 0.2s; }
         .btn-primary { background-color: #007aff; color: white; }
-        .btn-secondary { background-color: #333; color: white; }
         
-        #analysis-results, #extra-controls { display: none; }
-        
-        #status-display { margin-top: 15px; padding: 15px; background: #1c1c1e; border-radius: 12px; border-left: 4px solid #007aff; font-size: 1rem; line-height: 1.5; color: #eee; white-space: pre-wrap; }
         .hidden-uploader { position: absolute; top: 0; left: 0; opacity: 0; width: 0.1px; height: 0.1px; }
 
-        /* Centered Footer */
+        /* Footer */
         .footer {
             padding: 20px;
             display: flex;
@@ -70,25 +64,14 @@
             width: 100%;
             text-align: center;
         }
-
-        .footer-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .footer img {
-            height: 14px; 
-            width: 14px;
-            object-fit: contain;
-        }
+        .footer-content { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .footer img { height: 14px; width: 14px; object-fit: contain; }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="logo-container">
-            <img src="logo1.jpg" alt="MachZero" class="main-logo">
+            <img src="logo1.png" alt="MachZero" class="main-logo">
             <div class="app-tagline">Scan items. Calculate profit.</div>
         </div>
 
@@ -97,46 +80,22 @@
             <button class="btn btn-primary" onclick="document.getElementById('camera-input').click()">TAKE PHOTO</button>
         </div>
 
+        <h3 style="color: #888; font-size: 0.9rem; text-transform: uppercase;">Scan History</h3>
+        <div id="history-list"></div>
+
         <input type="file" id="gallery-input" class="hidden-uploader" accept="image/*">
         <input type="file" id="camera-input" class="hidden-uploader" accept="image/*" capture="environment">
+    </div>
 
-        <div id="analysis-results">
-            <div class="card">
-                <div class="info-trigger" onclick="toggleInfo('info-profit')">i</div>
-                <div class="result-label">NET PROFIT (EST)</div>
-                <div class="result-amount" id="net-profit">$0.00</div>
-                <div id="info-profit" class="info-box">
-                    <span class="info-title">Why the initial number?</span>
-                    The Net Profit starts by showing the AI-estimated market value. Once you input your Sourcing Cost and additional expenses, the app subtracts those in real-time to show your actual take-home margin.
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="info-trigger" onclick="toggleInfo('info-cost')">i</div>
-                <input type="number" id="sourcing-cost" placeholder="Enter Sourcing Cost ($)">
-                <div id="info-cost" class="info-box">
-                    <span class="info-title">Sourcing Cost Input</span>
-                    This is your initial investment for the item. Entering this updates the Net Profit card above, providing a transparent view of your actual profit.
-                </div>
-            </div>
-            
-            <div id="status-display">Waiting for input...</div>
-
-            <div id="extra-controls" class="card">
-                <div class="info-trigger" onclick="toggleInfo('info-expense')">i</div>
-                <div id="info-expense" class="info-box">
-                    <span class="info-title">Adding Expenses</span>
-                    Log any overhead costs incurred (e.g., fuel, cleaning supplies, or miscellaneous fees). These will be automatically deducted from your final Net Profit calculation.
-                </div>
-                <input type="number" id="expense-amount" placeholder="Add Expense Amount ($)">
-                <button class="btn btn-secondary" style="margin-top:10px;" id="add-expense-btn">LOG EXPENSE</button>
-            </div>
-        </div>
+    <!-- Detail Modal -->
+    <div id="item-modal" class="modal">
+        <span class="close-btn" onclick="document.getElementById('item-modal').style.display='none'">← BACK TO DASHBOARD</span>
+        <div id="modal-content" style="color: #fff; line-height: 1.6; max-width: 400px; margin: 0 auto;"></div>
     </div>
 
     <footer class="footer">
         <div class="footer-content">
-            <img src="logo1.jpg" alt="MachZero Logo">
+            <img src="logo1.png" alt="MachZero Logo">
             <span>© 2026 MachZero™</span>
         </div>
         <span>Powered by CactusByte</span>
@@ -144,56 +103,33 @@
     </footer>
 
     <script>
-        let aiEstimatedValue = 0;
-        let totalExpenses = 0;
+        const historyList = document.getElementById('history-list');
+        const modal = document.getElementById('item-modal');
+        const modalContent = document.getElementById('modal-content');
 
-        const netProfitDisplay = document.getElementById('net-profit');
-        const sourcingCostInput = document.getElementById('sourcing-cost');
-        const status = document.getElementById('status-display');
-        const analysisResults = document.getElementById('analysis-results');
-        const extraControls = document.getElementById('extra-controls');
-
-        function toggleInfo(id) {
-            const box = document.getElementById(id);
-            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function calculateProfit() {
-            const sourcingCost = parseFloat(sourcingCostInput.value) || 0;
-            const netProfit = aiEstimatedValue - sourcingCost - totalExpenses;
-            netProfitDisplay.textContent = '$' + netProfit.toFixed(2);
-            netProfitDisplay.style.color = netProfit < 0 ? '#ff3b30' : '#34c759';
-        }
-
-        sourcingCostInput.addEventListener('input', calculateProfit);
-
-        function handleFile(file) {
-            if (!file) return;
-            analysisResults.style.display = 'block';
-            status.textContent = "MachZero is scanning...";
+        function addToHistory(itemName, analysisText) {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `<span>${itemName}</span><span>›</span>`;
             
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    sendToServer(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
-                };
-                img.src = event.target.result;
+            div.onclick = () => {
+                modalContent.innerHTML = `
+                    <div class="card">
+                        <h3>Item Evaluation</h3>
+                        <p>${analysisText.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    <div class="card">
+                        <h3>Where to Sell</h3>
+                        <p>Based on this item, we recommend listing on <b>eBay</b> for maximum reach or <b>Mercari</b> for a faster, easier transaction experience.</p>
+                    </div>
+                `;
+                modal.style.display = 'block';
             };
-            reader.readAsDataURL(file);
+            historyList.prepend(div);
         }
-
-        document.getElementById('gallery-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
-        document.getElementById('camera-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
 
         async function sendToServer(base64Data) {
+            const itemName = "Scan: " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             try {
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
@@ -202,25 +138,16 @@
                 });
                 const data = await response.json();
                 const rawText = data.candidates[0].content.parts[0].text;
-                
-                const match = rawText.match(/Estimated Market Value:[^\d]*(\d+(\.\d+)?)/i);
-                if (match && match[1]) {
-                    aiEstimatedValue = parseFloat(match[1]);
-                    calculateProfit();
-                }
-                
-                status.textContent = rawText;
-                extraControls.style.display = 'block';
+                addToHistory(itemName, rawText);
             } catch (err) {
-                status.textContent = "Error: " + err.message;
+                alert("Error scanning item: " + err.message);
             }
         }
 
-        document.getElementById('add-expense-btn').addEventListener('click', () => {
-            const exp = parseFloat(document.getElementById('expense-amount').value) || 0;
-            totalExpenses += exp;
-            document.getElementById('expense-amount').value = '';
-            calculateProfit();
+        document.getElementById('gallery-input').addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => sendToServer(event.target.result.split(',')[1]);
+            reader.readAsDataURL(e.target.files[0]);
         });
     </script>
 </body>
