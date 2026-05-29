@@ -115,7 +115,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
+                    const MAX_WIDTH = 600; // Optimized size
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scaleSize;
@@ -131,7 +131,7 @@
         document.getElementById('gallery-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
         document.getElementById('camera-input').addEventListener('change', (e) => handleFile(e.target.files[0]));
 
-        async function sendToServer(base64Data) {
+        async function sendToServer(base64Data, isRetry = false) {
             try {
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
@@ -145,7 +145,13 @@
                     const data = JSON.parse(rawText);
                     status.textContent = data.candidates[0].content.parts[0].text;
                 } catch (e) {
-                    status.textContent = "Server Error: " + rawText;
+                    // Check for high demand error
+                    if (rawText.includes("high demand") && !isRetry) {
+                        status.textContent = "Server busy, retrying in 2 seconds...";
+                        setTimeout(() => sendToServer(base64Data, true), 2000);
+                    } else {
+                        status.textContent = "Server Error: " + rawText;
+                    }
                 }
             } catch (err) {
                 status.textContent = "Fetch Error: " + err.message;
