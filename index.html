@@ -75,12 +75,12 @@
     <div class="app-container">
         <div class="logo-container">
             <img src="logo1.jpg" alt="MachZero" class="main-logo">
-            <div class="app-tagline">📷"Snap a photo or upload an image to instantly estimate its resale market value.  Know what it's worth before you buy, sell, or pass it up.</div>
+            <div class="app-tagline">"Snap a photo or upload an image to instantly estimate its resale market valueKnow what it's worth before you buy, sell, or pass it up.</div>
         </div>
 
         <div class="card">
             <button class="btn btn-primary" onclick="document.getElementById('camera-input').click()">TAKE PHOTO</button>
-            <button class="btn btn-primary" onclick="document.getElementById('gallery-input').click()">SELECT PHOTO</button>
+            <button class="btn btn-primary" onclick="document.getElementById('gallery-input').click()">UPLOAD IMAGE</button>
         </div>
 
         <div id="analysis-results">
@@ -137,10 +137,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ imagesBase64: [base64Data] })
                 });
-                const data = await response.json();
-                status.textContent = data.candidates[0].content.parts[0].text;
+
+                const rawText = await response.text();
+                
+                try {
+                    const data = JSON.parse(rawText);
+                    status.textContent = data.candidates[0].content.parts[0].text;
+                } catch (e) {
+                    status.textContent = "Server Error: " + rawText;
+                }
             } catch (err) {
-                status.textContent = "Error: " + err.message;
+                status.textContent = "Fetch Error: " + err.message;
             }
         }
     </script>
